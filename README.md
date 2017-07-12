@@ -196,3 +196,9 @@ SwiftQ encodes tasks to JSON before sending them to the broker. Therefore only t
   "retryCount": 0
 }
 ```
+#### Installing
+Update your Package.swift file with
+
+```swift
+.Package(url: "https://github.com/John-Connolly/SwiftQ.git", majorVersion: 0)
+```
