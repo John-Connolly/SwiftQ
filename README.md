@@ -104,7 +104,7 @@ try producer.enqueue(task: demo, time: .seconds(30))
 ```
 This task will run in 30 seconds.
 
-NOTE: The task does not fire exactly at the time supplied. Rather, once that time has past, the task moves from the scheduled queue to the work queue and will be completed as workers are free to process it.
+NOTE: The task does not fire exactly at the time supplied. Rather, once that time has passed, the task moves from the scheduled queue to the work queue and will be completed as workers are free to process it.
 
 
 ####  Periodic tasks
@@ -180,8 +180,8 @@ SwiftQ encodes tasks to JSON before sending them to the broker. Therefore only t
 
 - String
 - Number
-- array
-- boolean
+- Array
+- Boolean
 
 #### JSON Format
 ```JSON
