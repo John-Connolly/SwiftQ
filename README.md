@@ -104,7 +104,7 @@ try producer.enqueue(task: demo, time: .seconds(30))
 ```
 This task will run in 30 seconds.
 
-NOTE: The task does not fire exactly at the time supplied. Rather, once that time has past, the task moves from the scheduled queue to the work queue and will be completed as workers are free to process it.
+NOTE: The task does not fire exactly at the time supplied. Rather, once that time has passed, the task moves from the scheduled queue to the work queue and will be completed as workers are free to process it.
 
 
 ####  Periodic tasks
@@ -160,11 +160,11 @@ try producer.enqueue(chain: chain)
 ```
 This chain represents (5 + 5) x 5 / 5
 
-Chains are ran in a serial queue.  If one of the tasks in a chain throws and error, the remaining tasks are canceled.
+Chains are run in a serial queue.  If one of the tasks in a chain throws an error, the remaining tasks are canceled.
 Note: Chaining a task to the same task instance will result in undefined behavior.
 
 ####  Advanced Usage
-By default all consumers consume tasks from the same queue.  You may want to specify which a custom queue for only certain tasks.  To do this just add to your task
+By default all consumers consume tasks from the same queue.  You may want to specify a custom queue which only certain tasks are routed to.  To do this just add this to your task
 
 ```swift
 var queue: String {
@@ -180,8 +180,8 @@ SwiftQ encodes tasks to JSON before sending them to the broker. Therefore only t
 
 - String
 - Number
-- array
-- boolean
+- Array
+- Boolean
 
 #### JSON Format
 ```JSON
