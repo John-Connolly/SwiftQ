@@ -24,6 +24,8 @@ extension Persistable {
     
     var name: String {
         return String(describing: self)
+            .components(separatedBy: ".")
+            .last ?? String(describing: self)
     }
     
     
