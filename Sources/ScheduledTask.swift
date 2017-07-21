@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 struct ScheduledTask {
     
     let time: String

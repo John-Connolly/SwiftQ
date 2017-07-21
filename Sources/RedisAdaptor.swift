@@ -8,8 +8,7 @@
 
 import Foundation
 import Redis
-
-
+import Dispatch
 
 final class RedisAdaptor: Adaptor {
    
