@@ -22,7 +22,7 @@ public final class Identification {
     
     public init(_ json: JSON) throws {
         self.uuid = try json.unsafeGet("uuid")
-        self.timestamp = try json.unsafeGet("timestamp")
+        self.timestamp = try json.getInt64("timestamp")
     }
     
     func json() -> JSON {

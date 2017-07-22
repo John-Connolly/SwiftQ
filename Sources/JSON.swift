@@ -40,4 +40,36 @@ public struct JSON {
         return value
     }
     
+    
+    /// https://bugs.swift.org/browse/SR-4599?jql=text%20~%20%22JSONSerialization%22
+    /// JSONSerialization behaves differently on linux
+    func getInt64(_ key: String) throws -> Int64 {
+        guard let value = json[key] else {
+            throw SwiftQError.initializationFailure(json)
+        }
+        
+        switch value {
+        case let value as Int64:
+            return value
+        case let value as Int:
+            return Int64(value)
+        case let value as Int8:
+            return Int64(value)
+        case let value as Int16:
+            return Int64(value)
+        case let value as Int32:
+            return Int64(value)
+        case let value as UInt:
+            return Int64(value)
+        case let value as UInt8:
+            return Int64(value)
+        case let value as UInt16:
+            return Int64(value)
+        case let value as UInt32:
+            return Int64(value)
+        default:
+            throw SwiftQError.initializationFailure(json)
+        }
+    }
+    
 }
