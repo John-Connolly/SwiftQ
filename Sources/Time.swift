@@ -10,12 +10,12 @@ import Foundation
 
 public enum Time {
     
-    case seconds(Int64)
-    case minutes(Int64)
-    case days(Int64)
-    case weeks(Int64)
+    case seconds(Int)
+    case minutes(Int)
+    case days(Int)
+    case weeks(Int)
     
-    var unixTime: Int64 {
+    var unixTime: Int {
         switch self {
         case .seconds(let seconds):
             return seconds

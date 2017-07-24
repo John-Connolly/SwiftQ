@@ -10,8 +10,8 @@ import Foundation
 
 extension Date {
     
-    var unixTime: Int64 {
-        return Int64(self.timeIntervalSince1970)
+    var unixTime: Int {
+        return Int(self.timeIntervalSince1970)
     }
     
 }

@@ -10,13 +10,13 @@ import Foundation
 
 public enum PeriodicTime {
     
-    case secondly(Int64)
-    case minutely(Int64)
-    case daily(minute: Int64, hour: Int64)
-    case weekly(minute: Int64, hour: Int64, day: Day)
+    case secondly(Int)
+    case minutely(Int)
+    case daily(minute: Int, hour: Int)
+    case weekly(minute: Int, hour: Int, day: Day)
     
     
-    var unixTime: Int64 {
+    var unixTime: Int {
         switch self {
         case .secondly(let seconds):
             return seconds
@@ -30,7 +30,7 @@ public enum PeriodicTime {
     }
     
     
-    var nextTime: Int64 {
+    var nextTime: Int {
         switch self {
         case .secondly(let seconds):
             return seconds
@@ -62,7 +62,7 @@ public enum PeriodicTime {
     }
     
     
-    func isPast(time: Int64) -> Bool {
+    func isPast(time: Int) -> Bool {
         return Date().unixTime >= time
     }
     
@@ -72,9 +72,9 @@ public enum PeriodicTime {
     }
     
     
-    func today() -> Int64 {
+    func today() -> Int {
         let components = Calendar(identifier: .gregorian).dateComponents([.weekday], from: Date())
-        return Int64(components.weekday!)
+        return components.weekday!
     }
     
     
@@ -82,21 +82,21 @@ public enum PeriodicTime {
         let components = Calendar(identifier: .gregorian).dateComponents([.weekday], from: Date())
         let currentWeekday = components.weekday!
         
-        let delta = day.rawValue - Int64(currentWeekday)
+        let delta = day.rawValue - currentWeekday
         let adjustedDelta = delta <= 0 ? delta + 7 : delta
         
         return addDays(adjustedDelta)
     }
     
     
-    func addDays(_ days: Int64) -> Date {
+    func addDays(_ days: Int) -> Date {
         return startOfDay().addingTimeInterval(TimeInterval(days * 86_400))
     }
     
     
 }
 
-public enum Day: Int64 {
+public enum Day: Int {
     case sunday = 1
     case monday
     case tuesday

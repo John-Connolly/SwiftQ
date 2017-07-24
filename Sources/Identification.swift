@@ -12,7 +12,7 @@ public final class Identification {
     
     private let uuid: String
     
-    private var timestamp: Int64?
+    private var timestamp: Int?
     
     private var attempts = 0
     
@@ -22,7 +22,7 @@ public final class Identification {
     
     public init(_ json: JSON) throws {
         self.uuid = try json.unsafeGet("uuid")
-        self.timestamp = try json.getInt64("timestamp")
+        self.timestamp = try json.getInt("timestamp")
     }
     
     func json() -> JSON {

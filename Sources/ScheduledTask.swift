@@ -22,7 +22,7 @@ struct ScheduledTask {
         self.task = data
     }
     
-    init(_ periodicTask: PeriodicTask, when time: Int64) throws {
+    init(_ periodicTask: PeriodicTask, when time: Int) throws {
         let data = try periodicTask.serialized()
         self.time = time.description
         self.task = data

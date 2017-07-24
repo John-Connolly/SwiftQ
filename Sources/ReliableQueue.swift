@@ -31,15 +31,18 @@ final class ReliableQueue {
     
     
     var processingQKey: String {
-        let name = consumer ?? host
-        return RedisKey.processingQ(name).name
+        return RedisKey.processingQ(consumerName).name
+    }
+    
+    var consumerName: String {
+        return consumer ?? host
     }
     
     
     /// Prepare is only called by consumers.  It adds the consumer name to a redis set.
     /// It also checks the processing queue for tasks and transfers them onto the work queue.
     func prepare() throws {
-        let command = Command(command: "SADD", args: [.string("consumers"), .string(host)])
+        let command = Command(command: "SADD", args: [.string("consumers"), .string(consumerName)])
         try redisAdaptor.execute(command)
         
         let lrange = Command(command: "LRANGE", args: [.string(processingQKey), .string("0"), .string("-1")])
@@ -96,7 +99,7 @@ final class ReliableQueue {
     
     /// Removes a specific message off the processing queue and increments the correct stats key
     func finished(task: Foundation.Data, success: Bool) throws {
-        let incrKey = success ? RedisKey.success(host).name : RedisKey.failure(host).name
+        let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             let commands = [
                 Command(command: "LREM", args: [.string(processingQKey), .string("0"), .data(task)]),
@@ -108,7 +111,7 @@ final class ReliableQueue {
     
     
     func finished(periodicTask: ScheduledTask, success: Bool) throws {
-        let incrKey = success ? RedisKey.success(host).name : RedisKey.failure(host).name
+        let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             let commands = [
                 Command(command: "LREM", args: [.string(processingQKey),
