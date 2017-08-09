@@ -26,7 +26,6 @@ final class QueueMonitor {
         self.timer = DispatchSource.makeTimerSource(queue: dispatchQueue)
     }
     
-    
     func run() {
         timer.scheduleRepeating(deadline: .now(), interval: .milliseconds(interval), leeway: .seconds(1))
         
@@ -37,7 +36,7 @@ final class QueueMonitor {
         timer.resume()
     }
     
-    
+    /// Polls every queue in the queues array at a set interval
     private func pollQueues() {
         queues.forEach { queue in
             queue.poll()

@@ -23,13 +23,17 @@ final class Worker {
     
     private let semaphore: DispatchSemaphore
     
+    private let middleware: [Middleware]
+    
     init(decoder: Decoder,
          config: RedisConfig,
          concurrency: Int,
          queue: String,
-         consumerName: String?) throws {
+         consumerName: String?,
+         middleware: [Middleware]) throws {
         self.semaphore = DispatchSemaphore(value: concurrency)
         self.decoder = decoder
+        self.middleware = middleware
         self.reliableQueue = try ReliableQueue(queue: queue, config: config, consumer: consumerName)
         try self.reliableQueue.prepare()
     }
@@ -37,22 +41,22 @@ final class Worker {
     /// Atomically transfers a task from the work queue into the
     /// processing queue then enqueues it to the worker.
     func run() {
-        brpoplpushQueue.async {
+        brpoplpushQueue.async { [unowned self] in
             while true {
                 do {
-                    guard let data = try self.reliableQueue.brpoplpush() else { continue }
+                    guard let data = try self.reliableQueue.dequeue() else { return }
                     try self.decode(data)
+                    
                 } catch {
                     Logger.log(("Decoding Failure", error))
                 }
             }
         }
+        
     }
-    
     
     private func decode(_ data: Data) throws {
         let result = try decoder.decode(data: data)
-        
         switch result {
         case .chain(let chain):
             execute(chain)
@@ -67,7 +71,11 @@ final class Worker {
     private func execute(_ chain: Chain) {
         serialQueue.async {
             do {
-                try chain.execute()
+                try chain.execute ({ before in
+                    self.middleware.forEach { $0.before(task: before) }
+                }) { after in
+                    self.middleware.forEach { $0.after(task: after) }
+                }
             } catch {
                 self.complete(chain: chain, success: false)
                 return
@@ -79,11 +87,13 @@ final class Worker {
     
     private func execute(_ task: Task) {
         
-        let work = workItem(for: task) { result in
+        let work = workItem(for: task) { [unowned self] result in
             switch result {
             case .success(let task):
+                self.middleware.forEach { $0.after(task: task) }
                 self.complete(task: task)
-            case .failure(let task,let error):
+            case .failure(let task, let error):
+                self.middleware.forEach { $0.after(task: task, with: error) }
                 self.failure(task, error: error)
             }
             
@@ -93,9 +103,11 @@ final class Worker {
     
     
     private func workItem(for task: Task, _ complete: @escaping (_ result: Result<Task>) ->  ()) -> DispatchWorkItem {
-        let item = DispatchWorkItem {
+        let item = DispatchWorkItem { [unowned self] in
             
             defer { self.semaphore.signal() }
+            
+            self.middleware.forEach { $0.before(task: task) }
             
             do {
                 try task.execute()
@@ -119,18 +131,21 @@ final class Worker {
         concurrentQueue.async(execute: workItem)
     }
     
-    
+    /// Called when a task is successfully completed. If the task is
+    /// periodic it is re-queued into the zset.
     private func complete(task: Task) {
         do {
             switch task.taskType {
             case .periodic:
+                
                 guard let periodicTask = task as? PeriodicTask else {
                     throw SwiftQError.periodicTaskFailure(task)
                 }
-                let scheduledTask = try ScheduledTask(periodicTask, when: periodicTask.frequency.nextTime)
-                try reliableQueue.finished(periodicTask: scheduledTask, success: true)
+                
+                let box = try PeriodicBox(periodicTask)
+                try reliableQueue.finished(box: box, success: true)
             default:
-                try reliableQueue.finished(task: try task.serialized(), success: true)
+                try reliableQueue.complete(item: try EnqueueingBox(task), success: true)
             }
         } catch {
             Logger.log(error)
@@ -139,24 +154,23 @@ final class Worker {
     
     private func complete(chain: Chain, success: Bool) {
         do {
-            let data = try chain.serialized()
-            try reliableQueue.finished(task: data, success: success)
+            try reliableQueue.complete(item: EnqueueingBox(chain), success: success)
         } catch {
             Logger.log(error)
         }
     }
     
-    
+    /// Called when the tasks fails. Note: If the tasks recovery
+    /// stategy is none it will never be ran again.
     private func failure(_ task: Task, error: Error)  {
         do {
             switch task.recoveryStrategy {
             case .none:
-                try reliableQueue.finished(task: try task.serialized(), success: false)
+                try reliableQueue.complete(item: EnqueueingBox(task), success: false)
             case .retry(_):
                 break
             case .log:
-                let log = try task.createLog(with: error)
-                try reliableQueue.log(task: try task.serialized(), log: log)
+                try reliableQueue.log(task: task, error: error)
             }
         } catch {
             Logger.log(error)

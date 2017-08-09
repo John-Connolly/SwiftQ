@@ -10,7 +10,7 @@ import Foundation
 
 public final class Identification {
     
-    private let uuid: String
+    let uuid: String
     
     private var timestamp: Int?
     

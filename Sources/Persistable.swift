@@ -28,11 +28,9 @@ extension Persistable {
             .last ?? String(describing: self)
     }
     
-    
     func serialized() throws -> Data {
         return try fullJSON().data()
     }
-    
     
     // TODO: - Rename
     func fullJSON() throws -> [String : Any] {
@@ -48,4 +46,3 @@ extension Persistable {
     }
     
 }
-

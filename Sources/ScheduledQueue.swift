@@ -20,19 +20,36 @@ final class ScheduledQueue: Monitorable {
     }
     
     
-    func zadd(_ scheduledTask: ScheduledTask) throws {
-        try redisAdaptor.execute(Command(command: "ZADD", args: [.string(RedisKey.scheduledQ.name),
-                                                                 .string(scheduledTask.time),
-                                                                 .data(scheduledTask.task)]))
+    func zadd(_ boxedTask: Boxable) throws {
+        try redisAdaptor.pipeline {
+            let commands = [
+                Command(command: "MULTI"),
+                Command(command: "ZADD", args: [.string(RedisKey.scheduledQ.name),
+                                                .string(boxedTask.time),
+                                                .string(boxedTask.uuid)]),
+                Command(command: "SET", args: [.string(boxedTask.uuid), .data(boxedTask.task)]),
+                Command(command: "EXEC")
+            ]
+            return commands
+        }
+        
     }
-    
     
     private func zrangeByScore() throws -> [Foundation.Data]? {
-        return try redisAdaptor.execute(Command(command: "ZRANGEBYSCORE", args:[.string(RedisKey.scheduledQ.name),
-                                                                                 .string("-inf"),
-                                                                                 .string(Date().unixTime.description)])).array
+        let ids = try redisAdaptor.execute(Command(command: "ZRANGEBYSCORE", args:[
+            .string(RedisKey.scheduledQ.name),
+            .string("-inf"),
+            .string(Date().unixTime.description)])).array
+        return try ids
+            .flatMap { ids -> Command? in
+                guard ids.count > 0 else { return nil }
+                let args = ids.map(ArgumentsType.data)
+                return Command(command: "MGET", args: args)
+            }.flatMap { command in
+                return try redisAdaptor.execute(command).array
+        }
+        
     }
-    
     
     /// Pushs multiple tasks onto the work queue from the scheduled queue
     private func transferQ(tasks: [Foundation.Data]) throws {
@@ -43,8 +60,10 @@ final class ScheduledQueue: Monitorable {
         lpushArgs.append(contentsOf: data)
         try redisAdaptor.pipeline {
             let commands = [
+                Command(command: "MULTI"),
                 Command(command: "ZREM", args: zremArgs),
-                Command(command: "LPUSH", args: lpushArgs)
+                Command(command: "LPUSH", args: lpushArgs),
+                Command(command: "EXEC")
             ]
             return commands
         }

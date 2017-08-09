@@ -23,7 +23,7 @@ struct Logger {
     }
     
     static func warning(_ item: Any) {
-        print("SWIFTQ: ", item , "❗️❗️")
+        print("SWIFTQ: ", item , "❗️")
     }
     
     

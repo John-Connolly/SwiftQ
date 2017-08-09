@@ -18,6 +18,10 @@ struct VaporRedisResponse: RedisResponseRepresentable {
         return response?.string?.data(using: .utf8)
     }
     
+    var string: String? {
+        return response?.string
+    }
+    
     var int: Int? {
         return response?.int
     }
@@ -36,6 +40,8 @@ protocol RedisResponseRepresentable {
     var data: Foundation.Data? { get }
     
     var int: Int? { get }
+    
+    var string: String? { get }
     
     var array: [Foundation.Data]? { get }
     

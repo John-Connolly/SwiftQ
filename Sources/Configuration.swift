@@ -26,13 +26,16 @@ public struct Configuration {
     /// If not provided Host.current().name will be used
     let consumerName: String?
     
+    let middleware: [Middleware]
+    
     public init(pollingInterval: Int,
          enableScheduling: Bool,
          concurrency: Int,
          redisConfig: RedisConfig,
          tasks: [Task.Type],
          queue: String = "default",
-         consumerName: String? = nil) {
+         consumerName: String? = nil,
+         middleware: [Middleware] = []) {
         
         self.pollingInterval = pollingInterval
         self.enableScheduling = enableScheduling
@@ -41,7 +44,7 @@ public struct Configuration {
         self.tasks = tasks
         self.queue = queue
         self.consumerName = consumerName
-        
+        self.middleware = middleware
     }
     
 }

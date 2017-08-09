@@ -26,33 +26,31 @@ public final class SwiftQProducer {
     /// Pushes a task onto the the tasks specific queue.  Unless specified
     /// this will be the default work queue.
     public func enqueue(task: Task) throws {
-        let data = try task.serialized()
-        try reliableQueue.lpush(task: data, queue: task.queue)
+        try reliableQueue.enqueue(item: EnqueueingBox(task))
     }
     
     /// Pushes multiple tasks onto the default work queue only.
     public func enqueue(tasks: [Task]) throws {
-        let tasks = try tasks.map { try $0.serialized() }
-        try reliableQueue.lpush(tasks: tasks)
+        let boxes = try tasks.map(EnqueueingBox.init)
+        try reliableQueue.enqueue(contentsOf: boxes)
     }
     
     /// Pushes a chained task onto the work queue
     public func enqueue(chain: Chain) throws {
-        let chainedTask = try chain.serialized()
-        try reliableQueue.lpush(task: chainedTask)
+        try reliableQueue.enqueue(item: EnqueueingBox(chain))
     }
     
     /// Pushes a task on the scheduled queue
     public func enqueue(task: Task, time: Time) throws {
-        let scheduledTask = try ScheduledTask(task, when: time)
-        try scheduledQueue.zadd(scheduledTask)
+        let box = try ScheduledBox(task, when: time)
+        try scheduledQueue.zadd(box)
     }
     
     /// Pushes a task on the scheduled queue, after the task is completed it is pushed back
     /// onto the scheduled queue.
     public func enqueue(periodicTask: PeriodicTask) throws {
-        let scheduledTask = try ScheduledTask(periodicTask, when: periodicTask.frequency.nextTime)
-        try scheduledQueue.zadd(scheduledTask)
+        let box = try PeriodicBox(periodicTask)
+        try scheduledQueue.zadd(box)
     }
     
 }
@@ -65,6 +63,3 @@ enum JSONKey: String {
     case error
     case chain
 }
-
-
-

@@ -15,7 +15,7 @@ final class ReliableQueue {
     
     private let blockingRedisAdaptor: Adaptor // Maybe have a pool here instead
     
-    private let host = Host.current().name ?? ""
+    private let ipAddress = IPAddress().address
     
     private let consumer: String?
     
@@ -35,7 +35,7 @@ final class ReliableQueue {
     }
     
     var consumerName: String {
-        return consumer ?? host
+        return consumer ?? ipAddress
     }
     
     
@@ -70,73 +70,114 @@ final class ReliableQueue {
         }
     }
     
-    
-    /// Pushs a task onto the work queue
-    func lpush(task: Foundation.Data, queue: String = "default") throws {
-        let command = Command(command: "LPUSH", args: [.string(RedisKey.workQ(queue).name), .data(task)])
-        try redisAdaptor.execute(command)
-    }
-    
-    
-    /// Pushs multiple tasks onto the work queue
-    func lpush(tasks: [Foundation.Data]) throws {
-        var args = tasks.map { ArgumentsType.data($0) }
-        args.insert(.string(RedisKey.workQ(queue).name), at: 0)
-        try redisAdaptor.execute(Command(command: "LPUSH", args: args))
-    }
-    
-    
-    /// Pops the last element off the work queue and pushes it to the front of the processsing queue
-    /// Blocks indefinitely if there are no items in the queue
-    func brpoplpush() throws -> Foundation.Data? {
-        let command = Command(command: "BRPOPLPUSH", args:[
-            .string(RedisKey.workQ(queue).name),
-            .string(processingQKey),
-            .string("0")])
-        return try blockingRedisAdaptor.execute(command).data
-    }
-    
-    
-    /// Removes a specific message off the processing queue and increments the correct stats key
-    func finished(task: Foundation.Data, success: Bool) throws {
-        let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
+    /// Pushes a task onto the work queue
+    func enqueue(item: EnqueueingBox) throws {
         try redisAdaptor.pipeline {
             let commands = [
-                Command(command: "LREM", args: [.string(processingQKey), .string("0"), .data(task)]),
-                Command(command: "INCR", args: [.string(incrKey) ])
+                Command(command: "MULTI"),
+                Command(command: "LPUSH", args: [.string(RedisKey.workQ(item.queue).name), .string(item.uuid)]),
+                Command(command: "SET", args: [.string(item.uuid), .data(item.value)]),
+                Command(command: "EXEC")
             ]
             return commands
         }
     }
     
+    /// Pushes and array of task onto the work queue
+    func enqueue(contentsOf items: [EnqueueingBox]) throws {
+        var listArgs = items.map { ArgumentsType.string($0.uuid) }
+        listArgs.insert(.string(RedisKey.workQ(queue).name), at: 0)
+        
+        let setArgs = items.reduce([], { (args, item) -> [ArgumentsType] in
+            var args = args
+            args.append(contentsOf: [ArgumentsType.string(item.uuid), ArgumentsType.data(item.value)])
+            return args
+        })
+        
+        try redisAdaptor.pipeline {
+            let commands = [
+                Command(command: "MULTI"),
+                Command(command: "LPUSH", args: listArgs),
+                Command(command: "MSET", args: setArgs),
+                Command(command: "EXEC")
+            ]
+            return commands
+        }
+    }
     
-    func finished(periodicTask: ScheduledTask, success: Bool) throws {
+    /// Pops the last element off the work queue and pushes it to the front of the processsing queue
+    /// Blocks indefinitely if there are no items in the queue
+    func dequeue() throws -> Foundation.Data? {
+        let dequeueCommand = Command(command: "BRPOPLPUSH", args:[
+            .string(RedisKey.workQ(queue).name),
+            .string(processingQKey),
+            .string("0")])
+        return try blockingRedisAdaptor.execute(dequeueCommand).string
+            .map { id in
+                return Command(command: "GET", args:[.string(id)])
+            }.flatMap { command in
+                return try blockingRedisAdaptor.execute(command).data
+        }
+    }
+    
+    /// Removes task from the processing queue, increments the stats key
+    //  and deletes the task.
+    func complete(item: EnqueueingBox, success: Bool) throws {
+        let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
+        try redisAdaptor.pipeline {
+            let commands = [
+                Command(command: "LREM", args: [.string(processingQKey), .string("0"), .string(item.uuid)]),
+                Command(command: "INCR", args: [.string(incrKey) ]),
+                Command(command: "DEL", args: [.string(item.uuid)])
+            ]
+            return commands
+        }
+    }
+    
+    /// Re-queues a periodic job in the zset
+    func finished(box: PeriodicBox, success: Bool) throws {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             let commands = [
                 Command(command: "LREM", args: [.string(processingQKey),
                                                 .string("0"),
-                                                .data(periodicTask.task)]),
+                                                .data(box.task)]),
                 Command(command: "INCR", args: [.string(incrKey)]),
                 Command(command: "ZADD", args: [.string(RedisKey.scheduledQ.name),
-                                                .string(periodicTask.time),
-                                                .data(periodicTask.task)])
+                                                .string(box.time),
+                                                .data(box.task)])
             ]
             return commands
         }
     }
     
-    
     /// Pushes data into the log list
-    func log(task: Foundation.Data, log: Foundation.Data) throws {
+    func log(task: Task, error: Error) throws {
+        let log = try task.createLog(with: error)
         try redisAdaptor.pipeline {
             let commands = [
-                Command(command: "LREM", args: [.string(processingQKey), .string("0"), .data(task)]),
-                Command(command: "INCR", args: [.string(RedisKey.failure(host).name)]),
+                Command(command: "LREM", args: [.string(processingQKey), .string("0"), .string(task.id.uuid)]),
+                Command(command: "INCR", args: [.string(RedisKey.failure(consumerName).name)]),
                 Command(command: "LPUSH", args: [.string(RedisKey.log(queue).name),.data(log)])
             ]
             return commands
         }
     }
+    
+}
+
+extension ReliableQueue: Queue { }
+
+protocol Queue {
+    
+    associatedtype Item
+    
+    associatedtype Result
+    
+    func enqueue(item: Item) throws
+    
+    func dequeue() throws -> Result?
+    
+    func complete(item: Item, success: Bool) throws
     
 }

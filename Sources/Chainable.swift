@@ -32,9 +32,3 @@ public enum Type {
     case float(Float)
     
 }
-
-
-
-
-
-

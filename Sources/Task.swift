@@ -25,20 +25,18 @@ extension Task {
         return .none
     }
     
-    
     public var queue: String {
         return "default"
     }
-
     
+    var uuid: String {
+        return id.uuid
+    }
+
     func createLog(with error: Error) throws -> Data {
         var json = try self.fullJSON()
         json[.error] = error.localizedDescription
         return try json.data()
     }
     
-    
 }
-
-
-

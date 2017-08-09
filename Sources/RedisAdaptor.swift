@@ -90,3 +90,10 @@ struct Command {
     
 }
 
+extension Command {
+    
+    init(command: String) {
+        self.command = command
+        self.args = []
+    }
+}

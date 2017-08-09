@@ -12,11 +12,14 @@ public final class Chain {
     
     let head: Chainable
     
+    let uuid: String
+    
     var _tasks: [Linkable] = []
     
     var tail: Injectable?
     
     public init(_ head: Chainable) {
+        self.uuid = UUID().uuidString
         self.head = head
     }
     
@@ -25,6 +28,7 @@ public final class Chain {
             throw SwiftQError.chainFailedToInitialize(tasks)
         }
         
+        self.uuid = UUID().uuidString
         self.head = head
         self.tail = tail
         self._tasks = tasks.flatMap { $0 as? Linkable }
@@ -53,16 +57,22 @@ public final class Chain {
     }
     
     
-    func execute() throws {
+    func execute(_ beforeHandler: (_ task: Task) -> (),
+                 afterHandler: (_ task: Task) -> ()) throws {
+        beforeHandler(head)
         try head.execute()
+        afterHandler(head)
         set(injection: head.result, at: 0)
         
         try _tasks.enumerated().forEach { index, task in
+            beforeHandler(task)
             try task.execute()
+            afterHandler(task)
             set(injection: task.result, at: index + 1)
         }
-        
+        tail.map(beforeHandler)
         try tail?.execute()
+        tail.map(afterHandler)
     }
     
     
@@ -82,6 +92,5 @@ public final class Chain {
         json["taskType"] = TaskType.chain.rawValue
         return try json.data()
     }
-    
     
 }

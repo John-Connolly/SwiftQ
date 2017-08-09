@@ -39,7 +39,12 @@ public final class SwiftQConsumer {
         }
         
         self.config = configuration
-        self.worker = try Worker(decoder: Decoder(types: configuration.tasks), config: configuration.redisConfig, concurrency: configuration.concurrency, queue: configuration.queue, consumerName: configuration.consumerName)
+        self.worker = try Worker(decoder: Decoder(types: configuration.tasks),
+                                 config: configuration.redisConfig,
+                                 concurrency: configuration.concurrency,
+                                 queue: configuration.queue,
+                                 consumerName: configuration.consumerName,
+                                 middleware: configuration.middleware)
         let scheduledQueue = try ScheduledQueue(config: configuration.redisConfig)
         self.monitor = QueueMonitor(queues: [scheduledQueue], interval: configuration.pollingInterval)
     }
@@ -58,6 +63,5 @@ public final class SwiftQConsumer {
         
         semaphore.wait()
     }
-
     
 }
