@@ -12,11 +12,13 @@ struct Decoder {
     
     let types:  [Task.Type]
     
-    private var zippedTasks: [(String , Task.Type)] {
-        let taskNames = types.map(String.init(describing:))
-        return zip(taskNames, types).array
-    }
+    private let zippedTasks: [(String , Task.Type)]
     
+    init(types: [Task.Type]) {
+        self.types = types
+        let taskNames = types.map(String.init(describing:))
+        self.zippedTasks = zip(taskNames, types).array
+    }
 
     /// Returns the correct task type based on the zipped tasks
     func decode(data: Foundation.Data) throws -> DecoderResult {

@@ -23,7 +23,7 @@ public struct Configuration {
     /// Used in order to specify a custom queue to consume from
     let queue: String
     /// Used for consumer specific processing queues.
-    /// If not provided Host.current().name will be used
+    /// If not provided the servers hostname will be used.
     let consumerName: String?
     
     let middleware: [Middleware]
@@ -59,16 +59,19 @@ public struct RedisConfig {
     let port: UInt16
     
     let password: String?
+    /// Max number of connections that will be created by the connection pool.
+    let connections: Int
     
     public static var development: RedisConfig {
-        return .init(redisDB: nil, hostname: "127.0.0.1", port: 6379, password: nil)
+        return .init(redisDB: nil, hostname: "127.0.0.1", port: 6379, password: nil, connections: 4)
     }
     
-    public init(redisDB: Int?, hostname: String, port: UInt16, password: String?) {
+    public init(redisDB: Int?, hostname: String, port: UInt16, password: String?, connections: Int) {
         self.redisDB = redisDB
         self.hostname = hostname
         self.port = port
         self.password = password
+        self.connections = connections
     }
     
 }

@@ -46,7 +46,6 @@ final class Worker {
                 do {
                     guard let data = try self.reliableQueue.dequeue() else { return }
                     try self.decode(data)
-                    
                 } catch {
                     Logger.log(("Decoding Failure", error))
                 }

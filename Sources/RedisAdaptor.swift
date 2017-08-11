@@ -8,41 +8,43 @@
 
 import Foundation
 import Redis
-import Dispatch
 
 final class RedisAdaptor: Adaptor {
-   
+    
     private let client: Redis.TCPClient
     
-    private let dispatchQueue = DispatchQueue(label: "com.swiftq.redis")
-    
+    let pool: ConnectionPool<Redis.TCPClient>
     
     init(config: RedisConfig) throws {
+        self.pool = try ConnectionPool(max: config.connections) {
+            return try Redis.TCPClient(hostname: config.hostname, port: config.port, password: config.password)
+        }
         self.client = try Redis.TCPClient(hostname: config.hostname, port: config.port, password: config.password)
         if let database = config.redisDB {
-            try execute(Command(command: "select", args: [.string(database.description)]))
+            try execute(Command(command: "SELECT", args: [.string(database.description)]))
         }
     }
     
-    
     @discardableResult
     func execute(_ command: Command) throws -> RedisResponseRepresentable {
-        return try dispatchQueue.sync {
-            VaporRedisResponse(response: try client.command(Redis.Command(command.command), command.bytes))
-        }
+        let client = pool.borrow()
+        defer { pool.takeBack(connection: client) }
+        return VaporRedisResponse(response: try client.command(Redis.Command(command.command), command.bytes))
     }
     
     
     @discardableResult
     func pipeline(_ commands: () -> ([Command])) throws -> [RedisResponseRepresentable] {
-        return try dispatchQueue.sync {
-            let arguments = commands()
-            let pipeline = client.makePipeline()
-            try arguments.forEach { argument in
-                try pipeline.enqueue(Redis.Command(argument.command), argument.bytes)
-            }
-            return try pipeline.execute().map(VaporRedisResponse.init)
+        let client = pool.borrow()
+        defer {
+            pool.takeBack(connection: client)
         }
+        let arguments = commands()
+        let pipeline = client.makePipeline()
+        try arguments.forEach { argument in
+            try pipeline.enqueue(Redis.Command(argument.command), argument.bytes)
+        }
+        return try pipeline.execute().map(VaporRedisResponse.init)
     }
     
 }

@@ -13,9 +13,7 @@ final class ReliableQueue {
     
     private let redisAdaptor: Adaptor
     
-    private let blockingRedisAdaptor: Adaptor // Maybe have a pool here instead
-    
-    private let ipAddress = IPAddress().address
+    private let hostName = Host().name
     
     private let consumer: String?
     
@@ -26,7 +24,6 @@ final class ReliableQueue {
         self.queue = queue
         self.consumer = consumer
         self.redisAdaptor = try RedisAdaptor(config: config)
-        self.blockingRedisAdaptor = try RedisAdaptor(config: config)
     }
     
     
@@ -35,7 +32,7 @@ final class ReliableQueue {
     }
     
     var consumerName: String {
-        return consumer ?? ipAddress
+        return consumer ?? hostName
     }
     
     
@@ -112,11 +109,11 @@ final class ReliableQueue {
             .string(RedisKey.workQ(queue).name),
             .string(processingQKey),
             .string("0")])
-        return try blockingRedisAdaptor.execute(dequeueCommand).string
+        return try redisAdaptor.execute(dequeueCommand).string
             .map { id in
                 return Command(command: "GET", args:[.string(id)])
             }.flatMap { command in
-                return try blockingRedisAdaptor.execute(command).data
+                return try redisAdaptor.execute(command).data
         }
     }
     
@@ -126,9 +123,11 @@ final class ReliableQueue {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             let commands = [
+                Command(command: "MULTI"),
                 Command(command: "LREM", args: [.string(processingQKey), .string("0"), .string(item.uuid)]),
                 Command(command: "INCR", args: [.string(incrKey) ]),
-                Command(command: "DEL", args: [.string(item.uuid)])
+                Command(command: "DEL", args: [.string(item.uuid)]),
+                Command(command: "EXEC")
             ]
             return commands
         }

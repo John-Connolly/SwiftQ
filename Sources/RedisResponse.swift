@@ -9,13 +9,12 @@
 import Foundation
 import Redis
 
-
 struct VaporRedisResponse: RedisResponseRepresentable {
     
     let response: Redis.Data?
     
     var data: Foundation.Data? {
-        return response?.string?.data(using: .utf8)
+        return response?.bytes.map(Foundation.Data.init(bytes:))
     }
     
     var string: String? {
@@ -27,9 +26,9 @@ struct VaporRedisResponse: RedisResponseRepresentable {
     }
     
     var array: [Foundation.Data]? {
-        return response?
-            .array?
-            .flatMap { $0?.string?.data(using: .utf8) }
+        return response?.array?.flatMap { data -> Foundation.Data? in
+            return data?.bytes.map(Foundation.Data.init(bytes:))
+        }
     }
     
 }
