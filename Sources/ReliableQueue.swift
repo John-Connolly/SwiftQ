@@ -20,10 +20,13 @@ final class ReliableQueue {
     private let queue: String
     
     
-    init(queue: String = "default", config: RedisConfig, consumer: String? = nil) throws {
+    init(queue: String = "default",
+         config: RedisConfig,
+         consumer: String? = nil,
+         concurrency: Int = 4) throws {
         self.queue = queue
         self.consumer = consumer
-        self.redisAdaptor = try RedisAdaptor(config: config)
+        self.redisAdaptor = try RedisAdaptor(config: config, connections: concurrency)
     }
     
     
@@ -53,15 +56,14 @@ final class ReliableQueue {
         }
         
         let tasks = items.map(ArgumentsType.data)
-        var lremArgs: [ArgumentsType] = [.string(processingQKey),.string("0")]
-        lremArgs.append(contentsOf: tasks)
         var lpushArgs: [ArgumentsType] = [.string(RedisKey.workQ(queue).name)]
         lpushArgs.append(contentsOf: tasks)
-        
         try redisAdaptor.pipeline {
             let commands = [
-                Command(command: "LREM", args: lremArgs),
-                Command(command: "LPUSH", args: lpushArgs)
+                Command(command: "MULTI"),
+                Command(command: "LPUSH", args: lpushArgs),
+                Command(command: "DEL", args: [.string(processingQKey)]),
+                Command(command: "EXEC")
             ]
             return commands
         }
@@ -134,17 +136,17 @@ final class ReliableQueue {
     }
     
     /// Re-queues a periodic job in the zset
-    func finished(box: PeriodicBox, success: Bool) throws {
+    func requeue(box: PeriodicBox, success: Bool) throws {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             let commands = [
                 Command(command: "LREM", args: [.string(processingQKey),
                                                 .string("0"),
-                                                .data(box.task)]),
+                                                .string(box.uuid)]),
                 Command(command: "INCR", args: [.string(incrKey)]),
                 Command(command: "ZADD", args: [.string(RedisKey.scheduledQ.name),
                                                 .string(box.time),
-                                                .data(box.task)])
+                                                .string(box.uuid)])
             ]
             return commands
         }

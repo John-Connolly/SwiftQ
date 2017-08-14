@@ -16,7 +16,7 @@ public enum PeriodicTime {
     case weekly(minute: Int, hour: Int, day: Day)
     
     
-    var unixTime: Int {
+    private var unixTime: Int {
         switch self {
         case .secondly(let seconds):
             return seconds
@@ -32,11 +32,11 @@ public enum PeriodicTime {
     
     var nextTime: Int {
         switch self {
-        case .secondly(let seconds):
-            return seconds
-        case .minutely(let minutes):
-            return (minutes * 60)
-        case .daily(_,_):
+        case .secondly:
+            return Date().unixTime + unixTime
+        case .minutely:
+            return  Date().unixTime + unixTime
+        case .daily:
             let isPast = self.isPast(time: startOfDay().unixTime + unixTime)
             let dateToAdd = isPast ? tomorrow() : startOfDay()
             return dateToAdd.unixTime + unixTime

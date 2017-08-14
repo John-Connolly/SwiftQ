@@ -16,7 +16,7 @@ final class ScheduledQueue: Monitorable {
     
     init(config: RedisConfig, queue: String = "default") throws {
         self.queue = queue
-        self.redisAdaptor = try RedisAdaptor(config: config)
+        self.redisAdaptor = try RedisAdaptor(config: config, connections: 1)
     }
     
     
@@ -40,15 +40,7 @@ final class ScheduledQueue: Monitorable {
             .string(RedisKey.scheduledQ.name),
             .string("-inf"),
             .string(Date().unixTime.description)])).array
-        return try ids
-            .flatMap { ids -> Command? in
-                guard ids.count > 0 else { return nil }
-                let args = ids.map(ArgumentsType.data)
-                return Command(command: "MGET", args: args)
-            }.flatMap { command in
-                return try redisAdaptor.execute(command).array
-        }
-        
+        return ids
     }
     
     /// Pushs multiple tasks onto the work queue from the scheduled queue

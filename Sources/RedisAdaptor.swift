@@ -11,24 +11,29 @@ import Redis
 
 final class RedisAdaptor: Adaptor {
     
-    private let client: Redis.TCPClient
-    
     let pool: ConnectionPool<Redis.TCPClient>
     
-    init(config: RedisConfig) throws {
-        self.pool = try ConnectionPool(max: config.connections) {
+    init(config: RedisConfig, connections: Int) throws {
+        self.pool = try ConnectionPool(max: connections) {
             return try Redis.TCPClient(hostname: config.hostname, port: config.port, password: config.password)
         }
-        self.client = try Redis.TCPClient(hostname: config.hostname, port: config.port, password: config.password)
-        if let database = config.redisDB {
-            try execute(Command(command: "SELECT", args: [.string(database.description)]))
+        
+        guard let database = config.redisDB else {
+            return
+        }
+        
+        let command = Command(command: "SELECT", args: [.string(database.description)])
+        try self.pool.connections.forEach { connection in
+            try connection.command(Redis.Command(command.command), command.bytes)
         }
     }
     
     @discardableResult
     func execute(_ command: Command) throws -> RedisResponseRepresentable {
         let client = pool.borrow()
-        defer { pool.takeBack(connection: client) }
+        defer {
+            pool.takeBack(connection: client)
+        }
         return VaporRedisResponse(response: try client.command(Redis.Command(command.command), command.bytes))
     }
     
@@ -58,7 +63,7 @@ protocol Adaptor: class {
     @discardableResult
     func pipeline(_ commands: () -> ([Command])) throws -> [RedisResponseRepresentable]
     
-    init(config: RedisConfig) throws
+    init(config: RedisConfig, connections: Int) throws
     
 }
 

@@ -14,7 +14,9 @@ public struct Configuration {
     let pollingInterval: Int
     /// If not using Scheduled tasks its more performant to set to false
     let enableScheduling: Bool
-    
+    /// Max number of threads the worker will use also the ax number of connections that will be 
+    /// created by the connection pool.  If set to 4, the worker will block on 4 different threads with
+    /// 4 separate redis connections while its waiting for work.
     let concurrency: Int
     
     let redisConfig: RedisConfig
@@ -59,19 +61,16 @@ public struct RedisConfig {
     let port: UInt16
     
     let password: String?
-    /// Max number of connections that will be created by the connection pool.
-    let connections: Int
     
     public static var development: RedisConfig {
-        return .init(redisDB: nil, hostname: "127.0.0.1", port: 6379, password: nil, connections: 4)
+        return .init(redisDB: nil, hostname: "127.0.0.1", port: 6379, password: nil)
     }
     
-    public init(redisDB: Int?, hostname: String, port: UInt16, password: String?, connections: Int) {
+    public init(redisDB: Int?, hostname: String, port: UInt16, password: String?) {
         self.redisDB = redisDB
         self.hostname = hostname
         self.port = port
         self.password = password
-        self.connections = connections
     }
     
 }
