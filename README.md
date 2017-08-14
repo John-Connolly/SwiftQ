@@ -1,4 +1,14 @@
-![Merge](https://user-images.githubusercontent.com/8390081/28135754-b291cf38-671d-11e7-8a1e-669a36246057.png)
+<p align="center">
+    <img src="https://user-images.githubusercontent.com/8390081/29257451-77c52e02-8088-11e7-80a8-385ef0dcce48.png"  alt="SwiftQ">
+    <br>
+    <br>
+    <a href="LICENSE">
+        <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
+    </a>
+    <a href="https://swift.org">
+        <img src="http://img.shields.io/badge/swift-3.1-brightgreen.svg" alt="Swift 3.1">
+    </a>
+</p>
 
 # SwiftQ
 
