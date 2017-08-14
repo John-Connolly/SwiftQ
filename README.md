@@ -1,4 +1,4 @@
-![Merge](https://user-images.githubusercontent.com/8390081/28135754-b291cf38-671d-11e7-8a1e-669a36246057.png)
+![Merge](https://user-images.githubusercontent.com/8390081/29257451-77c52e02-8088-11e7-80a8-385ef0dcce48.png)
 
 # SwiftQ
 
