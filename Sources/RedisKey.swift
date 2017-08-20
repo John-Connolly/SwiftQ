@@ -15,23 +15,23 @@ enum RedisKey {
     case scheduledQ
     case success(String)
     case failure(String)
-    case log(String)
+    case log
     
     
     var name: String {
         switch self {
         case .workQ(let queue):
-            return queue + "_WQ"
+            return queue + ":wq"
         case .processingQ(let queue):
-            return queue + "_PQ"
+            return queue + ":pq"
         case .success(let worker):
-            return worker + "_S"
+            return worker + ":s"
         case .failure(let worker):
-            return worker + "_F"
-        case .log(let worker):
-            return worker + "_LOGS"
+            return worker + ":f"
+        case .log:
+            return "logs"
         case .scheduledQ:
-            return  "default_SQ"
+            return  "default:sq"
         }
     }
     

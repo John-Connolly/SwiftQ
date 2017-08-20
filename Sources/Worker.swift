@@ -73,7 +73,7 @@ final class Worker {
         }
         return item
     }
-
+    
     /// Executes a chain. If one of the items in the chain fails
     /// the remaining tasks are canceled
     private func execute(_ chain: Chain) {
@@ -97,12 +97,11 @@ final class Worker {
             self.middleware.forEach { $0.before(task: task) }
             try task.execute()
             self.middleware.forEach { $0.after(task: task) }
+            self.complete(task: task)
         } catch {
             self.middleware.forEach { $0.after(task: task, with: error) }
             self.failure(task, error: error)
         }
-        
-        self.complete(task: task)
     }
     
     /// Called when a task is successfully completed. If the task is
@@ -136,8 +135,7 @@ final class Worker {
             switch task.recoveryStrategy {
             case .none:
                 try reliableQueue.complete(item: EnqueueingBox(task), success: false)
-            case .retry(_):
-                break
+            case .retry: break
             case .log:
                 try reliableQueue.log(task: task, error: error)
             }

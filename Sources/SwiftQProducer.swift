@@ -61,5 +61,9 @@ enum JSONKey: String {
     case identification
     case args
     case error
+    case errorAt
+    case consumer
     case chain
+    case createdAt
+    case uuid
 }

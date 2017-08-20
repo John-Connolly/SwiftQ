@@ -21,7 +21,7 @@ public struct JSON {
     }
     
     public func get<T>(key: String) throws -> T {
-        guard let args = json["args"] as? [String : Any] else {
+        guard let args = json[.args] as? [String : Any] else {
             throw SwiftQError.initializationFailure(json)
         }
         

@@ -10,7 +10,7 @@ import Foundation
 
 public protocol Task: Persistable {
     
-    func execute() throws
+    func execute() throws 
     
     var recoveryStrategy: RecoveryStrategy { get }
     
@@ -33,9 +33,11 @@ extension Task {
         return id.uuid
     }
 
-    func createLog(with error: Error) throws -> Data {
+    func createLog(with error: Error, consumer: String) throws -> Data {
         var json = try self.fullJSON()
         json[.error] = error.localizedDescription
+        json[.errorAt] = Date().unixTime
+        json[.consumer] = consumer
         return try json.data()
     }
     

@@ -11,13 +11,25 @@ import Foundation
 public enum SwiftQError: Swift.Error {
     
     case initializationFailure([String : Any])
-    case valueNotFound
-    case noStatsAvailable
     case taskNotFound
     case tasksNotRegistered
     case invalidConcurrency(Int)
     case invalidQueueName(String)
-    case periodicTaskFailure(Task)
     case chainFailedToInitialize([Task])
+    
+}
+
+extension SwiftQError: LocalizedError {
+    
+    public var errorDescription: String? {
+        switch self {
+        case .initializationFailure: return "Key not found or value is the wrong type"
+        case .taskNotFound: return "Make sure all tasks are registered in the configuration"
+        case .tasksNotRegistered: return "No tasks have been registered"
+        case .invalidConcurrency: return "Concurrency cannot be zero"
+        case .invalidQueueName: return "Queue name cannot be empty string"
+        case .chainFailedToInitialize(let tasks): return "invalid tasks: \(tasks)"
+        }
+    }
     
 }

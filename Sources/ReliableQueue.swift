@@ -154,12 +154,15 @@ final class ReliableQueue {
     
     /// Pushes data into the log list
     func log(task: Task, error: Error) throws {
-        let log = try task.createLog(with: error)
+        let log = try task.createLog(with: error, consumer: consumerName)
         try redisAdaptor.pipeline {
             let commands = [
-                Command(command: "LREM", args: [.string(processingQKey), .string("0"), .string(task.id.uuid)]),
+                Command(command: "MULTI"),
+                Command(command: "LREM", args: [.string(processingQKey), .string("0"), .string(task.uuid)]),
+                Command(command: "DEL", args: [.string(task.uuid)]),
                 Command(command: "INCR", args: [.string(RedisKey.failure(consumerName).name)]),
-                Command(command: "LPUSH", args: [.string(RedisKey.log(queue).name),.data(log)])
+                Command(command: "LPUSH", args: [.string(RedisKey.log.name),.data(log)]),
+                Command(command: "EXEC")
             ]
             return commands
         }
