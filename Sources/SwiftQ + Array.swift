@@ -10,15 +10,21 @@ import Foundation
 
 extension Array {
     
-    mutating func dequeue() -> Element? {
-        guard let job = self.first else { return nil }
-        self.removeFirst()
-        return job
-    }
-    
-    
     subscript (safe index: Int) -> Element? {
         return index < count ? self[index] : nil
     }
     
+    func prepend(_ element: Element) -> [Element] {
+        var array = self
+        array.insert(element, at: 0)
+        return array
+    }
+    
+    func reduce<A>(into initial: A, _ combine: (inout A, Iterator.Element) -> ()) -> A {
+        var result = initial
+        for element in self {
+            combine(&result, element)
+        }
+        return result
+    }
 }

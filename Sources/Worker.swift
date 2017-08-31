@@ -23,7 +23,7 @@ final class Worker {
     
     private let semaphore: DispatchSemaphore
     
-    private let middleware: [Middleware]
+    let middleware: [Middleware]
     
     init(decoder: Decoder,
          config: RedisConfig,
@@ -52,14 +52,18 @@ final class Worker {
     }
     
     private func workItem() -> DispatchWorkItem {
-        let item = DispatchWorkItem { [unowned self] in
+        return DispatchWorkItem { [unowned self] in
             
             defer {
                 self.semaphore.signal()
             }
             
             do {
-                guard let data = try self.reliableQueue.dequeue() else { return }
+                
+                guard let data = try self.reliableQueue.dequeue() else {
+                    return
+                }
+                
                 let result = try self.decoder.decode(data: data)
                 switch result {
                 case .chain(let chain):
@@ -71,7 +75,6 @@ final class Worker {
                 Logger.log("Failed to decode task")
             }
         }
-        return item
     }
     
     /// Executes a chain. If one of the items in the chain fails
@@ -80,9 +83,9 @@ final class Worker {
         serialQueue.sync {
             do {
                 try chain.execute ({ before in
-                    self.middleware.forEach { $0.before(task: before) }
+                    self.before(task: before)
                 }) { after in
-                    self.middleware.forEach { $0.after(task: after) }
+                    self.after(task: after)
                 }
             } catch {
                 self.complete(chain: chain, success: false)
@@ -94,12 +97,12 @@ final class Worker {
     
     private func execute(_ task: Task) {
         do {
-            self.middleware.forEach { $0.before(task: task) }
+            self.before(task: task)
             try task.execute()
-            self.middleware.forEach { $0.after(task: task) }
+            self.after(task: task)
             self.complete(task: task)
         } catch {
-            self.middleware.forEach { $0.after(task: task, with: error) }
+            self.after(task: task, with: error)
             self.failure(task, error: error)
         }
     }
@@ -141,6 +144,35 @@ final class Worker {
             }
         } catch {
             Logger.log(error)
+        }
+    }
+}
+
+extension Worker: Middlewareable { }
+
+protocol Middlewareable: class {
+    
+    var middleware: [Middleware] { get }
+    
+}
+
+extension Middlewareable {
+    
+    func before(task: Task) {
+        self.middleware.forEach { middleware in
+            middleware.before(task: task)
+        }
+    }
+    
+    func after(task: Task) {
+        self.middleware.forEach { middleware in
+            middleware.after(task: task)
+        }
+    }
+    
+    func after(task: Task, with error: Error) {
+        self.middleware.forEach { middleware in
+            middleware.after(task: task, with: error)
         }
     }
 }

@@ -42,10 +42,10 @@ final class ReliableQueue {
     /// Prepare is only called by consumers.  It adds the consumer name to a redis set.
     /// It also checks the processing queue for tasks and transfers them onto the work queue.
     func prepare() throws {
-        let command = Command(command: "SADD", args: [.string("consumers"), .string(consumerName)])
+        let command = Command.sadd(key: "consumers", value: consumerName)
         try redisAdaptor.execute(command)
         
-        let lrange = Command(command: "LRANGE", args: [.string(processingQKey), .string("0"), .string("-1")])
+        let lrange = Command.lrange(key: processingQKey, start: 0, stop: -1)
         
         guard let items = try redisAdaptor.execute(lrange).array else {
             return
@@ -55,65 +55,49 @@ final class ReliableQueue {
             return
         }
         
-        let tasks = items.map(ArgumentsType.data)
-        var lpushArgs: [ArgumentsType] = [.string(RedisKey.workQ(queue).name)]
-        lpushArgs.append(contentsOf: tasks)
         try redisAdaptor.pipeline {
-            let commands = [
-                Command(command: "MULTI"),
-                Command(command: "LPUSH", args: lpushArgs),
-                Command(command: "DEL", args: [.string(processingQKey)]),
-                Command(command: "EXEC")
+            return [
+                .multi,
+                .lpush(key: RedisKey.workQ(queue).name, values: items),
+                .del(key: processingQKey),
+                .exec
             ]
-            return commands
         }
+        
     }
     
     /// Pushes a task onto the work queue
     func enqueue(item: EnqueueingBox) throws {
         try redisAdaptor.pipeline {
-            let commands = [
-                Command(command: "MULTI"),
-                Command(command: "LPUSH", args: [.string(RedisKey.workQ(item.queue).name), .string(item.uuid)]),
-                Command(command: "SET", args: [.string(item.uuid), .data(item.value)]),
-                Command(command: "EXEC")
+            return [
+                .multi,
+                .lpush(key: RedisKey.workQ(item.queue).name, values: [item.uuid]),
+                .set(key: item.uuid, value: item.value),
+                .exec
             ]
-            return commands
         }
     }
     
     /// Pushes and array of task onto the work queue
     func enqueue(contentsOf items: [EnqueueingBox]) throws {
-        var listArgs = items.map { ArgumentsType.string($0.uuid) }
-        listArgs.insert(.string(RedisKey.workQ(queue).name), at: 0)
-        
-        let setArgs = items.reduce([], { (args, item) -> [ArgumentsType] in
-            var args = args
-            args.append(contentsOf: [ArgumentsType.string(item.uuid), ArgumentsType.data(item.value)])
-            return args
-        })
-        
+        let ids = items.map { $0.uuid }
         try redisAdaptor.pipeline {
-            let commands = [
-                Command(command: "MULTI"),
-                Command(command: "LPUSH", args: listArgs),
-                Command(command: "MSET", args: setArgs),
-                Command(command: "EXEC")
+            return [
+                .multi,
+                .lpush(key: RedisKey.workQ(queue).name, values: ids),
+                .mset(EnqueueingBoxes(items)),
+                .exec
             ]
-            return commands
         }
     }
     
     /// Pops the last element off the work queue and pushes it to the front of the processsing queue
     /// Blocks indefinitely if there are no items in the queue
     func dequeue() throws -> Foundation.Data? {
-        let dequeueCommand = Command(command: "BRPOPLPUSH", args:[
-            .string(RedisKey.workQ(queue).name),
-            .string(processingQKey),
-            .string("0")])
-        return try redisAdaptor.execute(dequeueCommand).string
+        let command = Command.brpoplpush(q1: RedisKey.workQ(queue).name, q2: processingQKey, timeout: 0)
+        return try redisAdaptor.execute(command).string
             .map { id in
-                return Command(command: "GET", args:[.string(id)])
+                return .get(key: id)
             }.flatMap { command in
                 return try redisAdaptor.execute(command).data
         }
@@ -124,14 +108,13 @@ final class ReliableQueue {
     func complete(item: EnqueueingBox, success: Bool) throws {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
-            let commands = [
-                Command(command: "MULTI"),
-                Command(command: "LREM", args: [.string(processingQKey), .string("0"), .string(item.uuid)]),
-                Command(command: "INCR", args: [.string(incrKey) ]),
-                Command(command: "DEL", args: [.string(item.uuid)]),
-                Command(command: "EXEC")
+            return [
+                .multi,
+                .lrem(key: processingQKey, count: 0, value: item.uuid),
+                .incr(key: incrKey),
+                .del(key: item.uuid),
+                .exec
             ]
-            return commands
         }
     }
     
@@ -139,16 +122,11 @@ final class ReliableQueue {
     func requeue(box: PeriodicBox, success: Bool) throws {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
-            let commands = [
-                Command(command: "LREM", args: [.string(processingQKey),
-                                                .string("0"),
-                                                .string(box.uuid)]),
-                Command(command: "INCR", args: [.string(incrKey)]),
-                Command(command: "ZADD", args: [.string(RedisKey.scheduledQ.name),
-                                                .string(box.time),
-                                                .string(box.uuid)])
+            return [
+                .lrem(key: processingQKey, count: 0, value: box.uuid),
+                .incr(key: incrKey),
+                .zadd(queue: RedisKey.scheduledQ.name, score: box.time, value: box.uuid)
             ]
-            return commands
         }
     }
     
@@ -156,16 +134,16 @@ final class ReliableQueue {
     func log(task: Task, error: Error) throws {
         let log = try task.createLog(with: error, consumer: consumerName)
         try redisAdaptor.pipeline {
-            let commands = [
-                Command(command: "MULTI"),
-                Command(command: "LREM", args: [.string(processingQKey), .string("0"), .string(task.uuid)]),
-                Command(command: "DEL", args: [.string(task.uuid)]),
-                Command(command: "INCR", args: [.string(RedisKey.failure(consumerName).name)]),
-                Command(command: "LPUSH", args: [.string(RedisKey.log.name),.data(log)]),
-                Command(command: "EXEC")
+            return  [
+                .multi,
+                .lrem(key: processingQKey, count: 0, value: task.uuid),
+                .del(key: task.uuid),
+                .incr(key: RedisKey.failure(consumerName).name),
+                .lpush(key: RedisKey.log.name, values: [log]),
+                .exec
             ]
-            return commands
         }
+        
     }
     
 }

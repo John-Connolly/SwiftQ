@@ -22,42 +22,32 @@ final class ScheduledQueue: Monitorable {
     
     func zadd(_ boxedTask: Boxable) throws {
         try redisAdaptor.pipeline {
-            let commands = [
-                Command(command: "MULTI"),
-                Command(command: "ZADD", args: [.string(RedisKey.scheduledQ.name),
-                                                .string(boxedTask.time),
-                                                .string(boxedTask.uuid)]),
-                Command(command: "SET", args: [.string(boxedTask.uuid), .data(boxedTask.task)]),
-                Command(command: "EXEC")
+            return [
+                .multi,
+                .zadd(queue: RedisKey.scheduledQ.name, score: boxedTask.time, value: boxedTask.uuid),
+                .set(key: boxedTask.uuid, value: boxedTask.task),
+                .exec
             ]
-            return commands
         }
-        
     }
     
     private func zrangeByScore() throws -> [Foundation.Data]? {
-        let ids = try redisAdaptor.execute(Command(command: "ZRANGEBYSCORE", args:[
-            .string(RedisKey.scheduledQ.name),
-            .string("-inf"),
-            .string(Date().unixTime.description)])).array
+        let ids = try redisAdaptor.execute(.zrangebyscore(
+            key: RedisKey.scheduledQ.name,
+            min: "-inf",
+            max: Date().unixTime.description)).array
         return ids
     }
     
     /// Pushs multiple tasks onto the work queue from the scheduled queue
     private func transferQ(tasks: [Foundation.Data]) throws {
-        let data = tasks.map(ArgumentsType.data)
-        var zremArgs = [ArgumentsType.string(RedisKey.scheduledQ.name)]
-        zremArgs.append(contentsOf: data)
-        var lpushArgs = [ArgumentsType.string(RedisKey.workQ(queue).name)]
-        lpushArgs.append(contentsOf: data)
         try redisAdaptor.pipeline {
-            let commands = [
-                Command(command: "MULTI"),
-                Command(command: "ZREM", args: zremArgs),
-                Command(command: "LPUSH", args: lpushArgs),
-                Command(command: "EXEC")
+            return [
+                .multi,
+                .zrem(key: RedisKey.scheduledQ.name, values: tasks),
+                .lpush(key: RedisKey.workQ(queue).name, values: tasks),
+                .exec
             ]
-            return commands
         }
     }
     
