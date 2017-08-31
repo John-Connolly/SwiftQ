@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "SwiftQ",
     dependencies: [
-        .Package(url: "https://github.com/vapor/redis-provider.git", majorVersion: 2)
+        .Package(url: "https://github.com/vapor/redis.git", majorVersion: 2)
         
     ]
 )
