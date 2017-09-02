@@ -58,6 +58,21 @@ class SwiftQTests: XCTestCase {
         XCTAssertEqual(taskType, "task")
     }
     
+    func testDecoder() {
+        let decoder = Decoder(types: [Example.self])
+        let example = Example(string: "", int: 1, bool: true)
+        let data = try! example.serialized()
+        let result = try! decoder.decode(data: data)
+        
+        guard case let DecoderResult.task(task) = result else {
+            XCTFail("decoding failed")
+            return
+        }
+        
+        XCTAssertEqual(task.uuid, example.uuid)
+        
+    }
+    
     //MARK: - All Tests
     static var allTests = [
         ("testPeriodicTime", testPeriodicTime),
