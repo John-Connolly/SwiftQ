@@ -1,5 +1,6 @@
 import XCTest
 @testable import SwiftQ
+@testable import Redis
 
 class SwiftQTests: XCTestCase {
     
@@ -73,14 +74,73 @@ class SwiftQTests: XCTestCase {
         
     }
     
+    
+    func testCommand() {
+        
+        let multi = Command.multi
+        let exec = Command.exec
+        let select = Command.select(db: 0)
+        let lrem = Command.lrem(key: "key", count: 0, value: "value")
+        let lpush = Command.lpush(key: "key", values: ["value"])
+        let lrange = Command.lrange(key: "key", start: 0, stop: 0)
+        let brpoplpush = Command.brpoplpush(q1: "q1", q2: "q2", timeout: 0)
+        let get = Command.get(key: "key")
+        let set = Command.set(key: "key", value: "value")
+        let incr = Command.incr(key: "key")
+        let zadd = Command.zadd(queue: "key", score: "0", value: "value")
+        let zrangebyscore = Command.zrangebyscore(key: "key", min: "min", max: "max")
+        let zrem = Command.zrem(key: "key", values: ["value"])
+        let sadd = Command.sadd(key: "key", value: "value")
+        
+        XCTAssertEqual(multi.data, [])
+        XCTAssertEqual(exec.data, [])
+        XCTAssertEqual(select.data, ["0".data])
+        XCTAssertEqual(lrem.data, ["key".data, "0".data, "value".data])
+        XCTAssertEqual(lpush.data, ["key".data, "value".data])
+        XCTAssertEqual(lrange.data, ["key".data, "0".data, "0".data])
+        XCTAssertEqual(brpoplpush.data, ["q1".data, "q2".data, "0".data])
+        XCTAssertEqual(get.data, ["key".data])
+        XCTAssertEqual(set.data, ["key".data, "value".data])
+        XCTAssertEqual(incr.data, ["key".data])
+        XCTAssertEqual(zadd.data, ["key".data, "0".data, "value".data])
+        XCTAssertEqual(zrangebyscore.data, ["key".data, "min".data, "max".data])
+        XCTAssertEqual(zrem.data, ["key".data, "value".data])
+        XCTAssertEqual(sadd.data, ["key".data, "value".data])
+    }
+    
+    
+    
     //MARK: - All Tests
     static var allTests = [
         ("testPeriodicTime", testPeriodicTime),
         ("testTask", testTask),
-        ("testTime", testTime)
+        ("testTime", testTime),
+        ("testDecoder", testDecoder),
+        ("testCommand", testCommand)
         ]
 }
 
+extension SwiftQ.Command {
+    
+    var bytes: [[UInt8]] {
+        return params.map { try! $0.makeBytes() }
+    }
+    
+    var data: [Foundation.Data] {
+        return bytes.map { Foundation.Data(bytes: $0) }
+    }
+    
+}
+
+extension String {
+    
+    var data: Foundation.Data {
+        return self.data(using: .utf8)!
+    }
+    
+}
+
+// MARK: - Mocks
 final class Example: Task {
     
     let id: Identification

@@ -14,7 +14,7 @@ public struct Configuration {
     let pollingInterval: Int
     /// If not using Scheduled tasks its more performant to set to false
     let enableScheduling: Bool
-    /// Max number of threads the worker will use also the ax number of connections that will be 
+    /// Max number of threads the worker will use also the max number of connections that will be
     /// created by the connection pool.  If set to 4, the worker will block on 4 different threads with
     /// 4 separate redis connections while its waiting for work.
     let concurrency: Int
