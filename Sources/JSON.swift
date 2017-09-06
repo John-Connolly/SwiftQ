@@ -75,3 +75,16 @@ public struct JSON {
     }
     
 }
+
+enum JSONKey: String {
+    case taskName
+    case identification
+    case args
+    case error
+    case errorAt
+    case consumer
+    case chain
+    case createdAt
+    case uuid
+    case taskType
+}

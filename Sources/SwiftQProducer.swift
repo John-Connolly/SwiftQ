@@ -15,7 +15,7 @@ public final class SwiftQProducer {
     private let scheduledQueue: ScheduledQueue
     
     public init(redisConfig: RedisConfig) throws {
-        self.reliableQueue = try ReliableQueue(config: redisConfig)
+        self.reliableQueue = try ReliableQueue(config: redisConfig, concurrency: 4)
         self.scheduledQueue = try ScheduledQueue(config: redisConfig)
         
         if redisConfig.password == nil {
@@ -53,17 +53,4 @@ public final class SwiftQProducer {
         try scheduledQueue.zadd(box)
     }
     
-}
-
-
-enum JSONKey: String {
-    case taskName
-    case identification
-    case args
-    case error
-    case errorAt
-    case consumer
-    case chain
-    case createdAt
-    case uuid
 }

@@ -24,7 +24,7 @@ struct Decoder {
     func decode(data: Foundation.Data) throws -> DecoderResult {
         let json = try data.jsonDictionary(key: String.self, value: Any.self)
         
-        let taskType = TaskType(json["taskType"] as? String ?? "")
+        let taskType = TaskType(json[.taskType] as? String ?? "")
         
         switch taskType {
         case .chain:
@@ -47,7 +47,7 @@ struct Decoder {
     
     
     func decode(chain json: [String : Any]) throws -> Chain {
-        guard let chain = json["chain"] as? [[String : Any]] else {
+        guard let chain = json[.chain] as? [[String : Any]] else {
             throw SwiftQError.taskNotFound
         }
         
