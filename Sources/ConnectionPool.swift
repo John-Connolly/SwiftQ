@@ -28,7 +28,7 @@ final class ConnectionPool<T> {
         self.connectionFactory = factory
         self.semaphore = DispatchSemaphore(value: max)
         
-        try (0...max).forEach { _ in
+        try (0..<max).forEach { _ in
             connections.append(try factory())
         }
     }
@@ -37,10 +37,10 @@ final class ConnectionPool<T> {
     /// have to be returned.  If all connections are borrowed the semaphore
     /// will block until one is returned.
     func borrow() -> T {
-        semaphore.wait()
         defer {
             lock.signal()
         }
+        semaphore.wait()
         lock.wait()
         return connections.removeFirst()
         
@@ -48,12 +48,12 @@ final class ConnectionPool<T> {
     
     /// Returns the connection to the pool.
     func takeBack(connection: T) {
-        semaphore.signal()
         defer {
             lock.signal()
         }
         lock.wait()
         connections.append(connection)
+        semaphore.signal()
     }
     
 }

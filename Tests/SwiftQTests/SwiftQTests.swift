@@ -108,6 +108,30 @@ class SwiftQTests: XCTestCase {
         XCTAssertEqual(sadd.data, ["key".data, "value".data])
     }
     
+    let pool = try! ConnectionPool(max: 4) {
+        return "Connection"
+    }
+    
+    func testConnectionPool() {
+        XCTAssertEqual(pool.connections.count, 4)
+        let borrowed = pool.borrow()
+        XCTAssertEqual(pool.connections.count, 3)
+        XCTAssertEqual(borrowed, "Connection")
+        
+
+        
+        DispatchQueue(label: "").asyncAfter(deadline: DispatchTime(secondsFromNow: 1)) {
+            self.pool.takeBack(connection: "Connection")
+
+        }
+        
+        _ = self.pool.borrow()
+        _ = self.pool.borrow()
+        _ = self.pool.borrow()
+        _ = self.pool.borrow()
+        XCTAssertEqual(pool.connections.count, 0)
+    }
+    
     
     
     //MARK: - All Tests
@@ -116,8 +140,9 @@ class SwiftQTests: XCTestCase {
         ("testTask", testTask),
         ("testTime", testTime),
         ("testDecoder", testDecoder),
-        ("testCommand", testCommand)
-        ]
+        ("testCommand", testCommand),
+        ("testConnectionPool",testConnectionPool)
+    ]
 }
 
 extension SwiftQ.Command {
