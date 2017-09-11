@@ -110,7 +110,7 @@ struct EnqueueingBoxes {
     
     var bytesRepresentable: [BytesRepresentable] {
         return boxes.reduce(into: []) { (args: inout [BytesRepresentable], box) in
-            let keyAndValue:[BytesRepresentable] = [box.uuid, box.value]
+            let keyAndValue:[BytesRepresentable] = [box.uuid, box.task]
             args.append(contentsOf: keyAndValue)
         }
     }

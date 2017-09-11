@@ -8,9 +8,9 @@
 
 import Foundation
 
-struct ScheduledBox: Boxable {
+struct ScheduledBox:  ZSettable {
     
-    let time: String
+    let score: String
     
     let uuid: String
     
@@ -21,7 +21,7 @@ struct ScheduledBox: Boxable {
         let time = Date().unixTime + time.unixTime
         let data = try task.serialized()
         self.uuid = task.id.uuid
-        self.time = time.description
+        self.score = time.description
         self.task = data
     }
     
@@ -29,10 +29,6 @@ struct ScheduledBox: Boxable {
 }
 
 protocol Boxable {
-    
-    var time: String { get }
-    
-    var uuid: String { get }
     
     var task: Data { get }
     

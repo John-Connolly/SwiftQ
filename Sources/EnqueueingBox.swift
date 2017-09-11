@@ -11,8 +11,10 @@ import Foundation
 struct EnqueueingBox {
     
     let uuid: String
+    
     let queue: String
-    let value: Data
+    
+    let task: Data
     
 }
 
@@ -21,13 +23,13 @@ extension EnqueueingBox {
     init(_ chain: Chain) throws {
         self.uuid = chain.uuid
         self.queue = "default"
-        self.value = try chain.serialized()
+        self.task = try chain.serialized()
     }
     
     init(_ task: Task) throws {
         self.uuid = task.uuid
         self.queue = task.queue
-        self.value = try task.serialized()
+        self.task = try task.serialized()
     }
     
 }

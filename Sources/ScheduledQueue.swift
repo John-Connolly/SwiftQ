@@ -19,12 +19,11 @@ final class ScheduledQueue: Monitorable {
         self.redisAdaptor = try RedisAdaptor(config: config, connections: 1)
     }
     
-    
-    func zadd(_ boxedTask: Boxable) throws {
+    func zadd(_ boxedTask: ZSettable) throws {
         try redisAdaptor.pipeline {
             return [
                 .multi,
-                .zadd(queue: RedisKey.scheduledQ.name, score: boxedTask.time, value: boxedTask.uuid),
+                .zadd(queue: RedisKey.scheduledQ.name, score: boxedTask.score, value: boxedTask.uuid),
                 .set(key: boxedTask.uuid, value: boxedTask.task),
                 .exec
             ]

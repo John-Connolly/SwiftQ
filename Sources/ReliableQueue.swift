@@ -23,7 +23,7 @@ final class ReliableQueue {
     init(queue: String = "default",
          config: RedisConfig,
          consumer: String? = nil,
-         concurrency: Int = 4) throws {
+         concurrency: Int) throws {
         self.queue = queue
         self.consumer = consumer
         self.redisAdaptor = try RedisAdaptor(config: config, connections: concurrency)
@@ -72,7 +72,7 @@ final class ReliableQueue {
             return [
                 .multi,
                 .lpush(key: RedisKey.workQ(item.queue).name, values: [item.uuid]),
-                .set(key: item.uuid, value: item.value),
+                .set(key: item.uuid, value: item.task),
                 .exec
             ]
         }
@@ -119,13 +119,13 @@ final class ReliableQueue {
     }
     
     /// Re-queues a periodic job in the zset
-    func requeue(box: PeriodicBox, success: Bool) throws {
+    func requeue(box: ZSettable, success: Bool) throws {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             return [
                 .lrem(key: processingQKey, count: 0, value: box.uuid),
                 .incr(key: incrKey),
-                .zadd(queue: RedisKey.scheduledQ.name, score: box.time, value: box.uuid)
+                .zadd(queue: RedisKey.scheduledQ.name, score: box.score, value: box.uuid)
             ]
         }
     }

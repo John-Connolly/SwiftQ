@@ -8,9 +8,9 @@
 
 import Foundation
 
-struct PeriodicBox: Boxable {
+struct PeriodicBox: ZSettable {
     
-    let time: String
+    let score: String
     
     let uuid: String
     
@@ -19,8 +19,15 @@ struct PeriodicBox: Boxable {
     init(_ periodicTask: PeriodicTask) throws {
         let data = try periodicTask.serialized()
         self.uuid = periodicTask.id.uuid
-        self.time = periodicTask.frequency.nextTime.description
+        self.score = periodicTask.frequency.nextTime.description
         self.task = data
     }
     
+}
+
+protocol ZSettable: Boxable {
+    
+    var uuid: String { get }
+    
+    var score: String { get }
 }
