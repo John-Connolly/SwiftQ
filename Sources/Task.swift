@@ -42,3 +42,9 @@ extension Task {
     }
     
 }
+
+protocol Loggable: class {
+    
+    func log(with error: Error, consumer: String) throws -> Data
+
+}

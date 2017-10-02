@@ -13,6 +13,6 @@ public enum RecoveryStrategy {
     // Removes task from the queue.
     case none
     // retries the task a specified amount of times
-    case retry(times: Int)
+    case retry(Int)
     case log
 }

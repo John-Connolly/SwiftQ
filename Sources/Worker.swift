@@ -88,22 +88,22 @@ final class Worker {
                     self.after(task: after)
                 }
             } catch {
-                self.complete(chain: chain, success: false)
+                complete(chain: chain, success: false)
                 return
             }
-            self.complete(chain: chain, success: true)
+            complete(chain: chain, success: true)
         }
     }
     
     private func execute(_ task: Task) {
         do {
-            self.before(task: task)
+            before(task: task)
             try task.execute()
-            self.after(task: task)
-            self.complete(task: task)
+            after(task: task)
+            complete(task: task)
         } catch {
-            self.after(task: task, with: error)
-            self.failure(task, error: error)
+            after(task: task, with: error)
+            failure(task, error: error)
         }
     }
     

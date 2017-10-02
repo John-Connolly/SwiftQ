@@ -14,7 +14,7 @@ public final class Identification {
     
     private var createdAt: Int?
     
-    private var attempts = 0
+    private var retryCount = 0
     
     public init() {
         self.uuid = UUID().uuidString
@@ -23,12 +23,14 @@ public final class Identification {
     public init(_ json: JSON) throws {
         self.uuid = try json.unsafeGet(JSONKey.uuid.rawValue)
         self.createdAt = try json.getInt(JSONKey.createdAt.rawValue)
+        self.retryCount = try json.getInt(JSONKey.retryCount.rawValue)
     }
     
     func json() -> JSON {
         var json = [String : Any]()
         json[.uuid] = uuid
         json[.createdAt] = createdAt ?? Date().unixTime
+        json[.retryCount] = retryCount
         return JSON(json)
     }
     

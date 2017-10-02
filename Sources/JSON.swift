@@ -87,4 +87,5 @@ enum JSONKey: String {
     case createdAt
     case uuid
     case taskType
+    case retryCount
 }
