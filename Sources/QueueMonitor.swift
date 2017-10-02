@@ -27,7 +27,7 @@ final class QueueMonitor {
     }
     
     func run() {
-        timer.scheduleRepeating(deadline: .now(), interval: .milliseconds(interval), leeway: .seconds(1))
+        timer.schedule(deadline: .now(), repeating: .milliseconds(interval), leeway: .seconds(1))
         
         timer.setEventHandler { [weak self] in
             self?.pollQueues()
