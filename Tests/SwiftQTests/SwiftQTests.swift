@@ -168,7 +168,7 @@ extension String {
 // MARK: - Mocks
 final class Example: Task {
     
-    let id: Identification
+    let id: Storage
     
     let string: String
     let int: Int
@@ -187,14 +187,14 @@ final class Example: Task {
     }
     
     init(string: String, int: Int, bool: Bool) {
-        self.id = Identification()
+        self.id = Storage()
         self.string = string
         self.int = int
         self.bool = bool
     }
     
     init(json: JSON) throws {
-        self.id = try Identification(json)
+        self.id = try Storage(json)
         self.string = try json.get(key: "string")
         self.int = try json.get(key: "int")
         self.bool = try json.get(key: "bool")

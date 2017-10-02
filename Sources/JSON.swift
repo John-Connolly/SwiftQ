@@ -32,7 +32,7 @@ public struct JSON {
         return value
     }
     
-    /// Used only for Identification
+    /// Used only for Storage
     func unsafeGet<T>(_ key: String) throws -> T {
         guard let value = json[key] as? T else {
             throw SwiftQError.initializationFailure(json)

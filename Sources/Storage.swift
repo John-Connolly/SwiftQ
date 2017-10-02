@@ -8,7 +8,7 @@
 
 import Foundation
 
-public final class Identification {
+public final class Storage {
     
     let uuid: String
     

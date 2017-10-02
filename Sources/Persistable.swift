@@ -10,7 +10,7 @@ import Foundation
 
 public protocol Persistable: class {
     
-    var id: Identification { get }
+    var id: Storage { get }
     
     func json() throws -> JSON
     
