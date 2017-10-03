@@ -29,7 +29,7 @@ extension EnqueueingBox {
     init(_ task: Task) throws {
         self.uuid = task.uuid
         self.queue = task.queue
-        self.task = try task.serialized()
+        self.task = try task.data()
     }
     
 }

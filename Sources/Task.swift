@@ -8,7 +8,9 @@
 
 import Foundation
 
-public protocol Task: Persistable {
+public protocol Task: Codable {
+    
+    var storage: Storage { get }
     
     func execute() throws 
     
@@ -17,6 +19,8 @@ public protocol Task: Persistable {
     var queue: String { get }
     
 }
+
+
 
 extension Task {
     
@@ -30,15 +34,23 @@ extension Task {
     }
     
     var uuid: String {
-        return id.uuid
+        return storage.uuid
     }
-
+    
+    
+    init(data: Data) throws {
+        self = try JSONDecoder().decode(Self.self, from: data)
+    }
+    
     func createLog(with error: Error, consumer: String) throws -> Data {
-        var json = try self.fullJSON()
-        json[.error] = error.localizedDescription
-        json[.errorAt] = Date().unixTime
-        json[.consumer] = consumer
-        return try json.data()
+        let log = Log(message: error.localizedDescription, consumer: consumer, date: Date().unixTime)
+        storage.set(log: log)
+        return try data()
+    }
+    
+    func data() throws -> Data {
+        let encoder = JSONEncoder()
+        return try encoder.encode(self)
     }
     
 }
@@ -46,5 +58,6 @@ extension Task {
 protocol Loggable: class {
     
     func log(with error: Error, consumer: String) throws -> Data
-
+    
 }
+

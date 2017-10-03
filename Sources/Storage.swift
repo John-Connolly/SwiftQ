@@ -8,31 +8,43 @@
 
 import Foundation
 
-public final class Storage {
+public final class Storage: Codable {
     
     let uuid: String
+    
+    private let name: String
     
     private var createdAt: Int?
     
     private var retryCount = 0
     
-    public init() {
+    private var log: Log?
+    
+    public init<T: Task>(_ type: T.Type) {
+        self.name = String(describing: type)
         self.uuid = UUID().uuidString
     }
     
-    public init(_ json: JSON) throws {
-        self.uuid = try json.unsafeGet(JSONKey.uuid.rawValue)
-        self.createdAt = try json.getInt(JSONKey.createdAt.rawValue)
-        self.retryCount = try json.getInt(JSONKey.retryCount.rawValue)
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: Storage.CodingKeys.self)
+        try container.encode(uuid, forKey: .uuid)
+        try container.encode(name, forKey: .name)
+        try container.encode(createdAt ?? Date().unixTime, forKey: .createdAt)
+        try container.encode(retryCount, forKey: .retryCount)
+        try container.encodeIfPresent(log, forKey: .log)
     }
     
-    func json() -> JSON {
-        var json = [String : Any]()
-        json[.uuid] = uuid
-        json[.createdAt] = createdAt ?? Date().unixTime
-        json[.retryCount] = retryCount
-        return JSON(json)
+    func set(log: Log) {
+        self.log = log
     }
+    
+}
+
+struct Log: Codable {
+    
+    let message: String
+    let consumer: String
+    let date: Int
     
 }
 

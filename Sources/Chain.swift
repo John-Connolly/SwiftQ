@@ -47,12 +47,12 @@ public final class Chain {
         return self
     }
     
-    
+    // TODO: fix this
     private func set(injection: Type?, at index: Int) {
         if index == _tasks.count {
             tail?.injection = injection
         } else {
-            _tasks[safe: index]?.injection = injection
+//            _tasks[safe: index]?.injection = injection
         }
     }
     
@@ -85,10 +85,10 @@ public final class Chain {
         return tasks
     }
     
-    
+    // TODO: -> fix this
     func serialized() throws -> Data {
         var json = [String : Any]()
-        json["chain"] = try tasks.map { try $0.fullJSON() }
+//        json["chain"] = try tasks.map { try $0.fullJSON() }
         json["taskType"] = TaskType.chain.rawValue
         return try json.data()
     }

@@ -14,55 +14,46 @@ struct Decoder {
     
     private let zippedTasks: [(String , Task.Type)]
     
+    
     init(types: [Task.Type]) {
         self.types = types
         let taskNames = types.map(String.init(describing:))
         self.zippedTasks = zip(taskNames, types).array
     }
-
+    
     /// Returns the correct task type based on the zipped tasks
     func decode(data: Foundation.Data) throws -> DecoderResult {
         let json = try data.jsonDictionary(key: String.self, value: Any.self)
+        let storage = json["storage"] as? [String: Any]
         
-        let taskType = TaskType(json[.taskType] as? String ?? "")
-        
-        switch taskType {
-        case .chain:
-            return DecoderResult.chain(try decode(chain: json))
-        default:
-            return DecoderResult.task(try decode(task: json))
-        }
-    }
-    
-    
-    func decode(task: [String : Any]) throws -> Task {
-        let taskName = (task[.taskName] as? String) ?? ""
-        
-        guard let taskType = zippedTasks.filter({ $0.0 == taskName }).first?.1 else {
+        guard let taskName = storage?["name"] as? String else {
             throw SwiftQError.taskNotFound
         }
         
-        return try taskType.init(json: JSON(task))
+        let task = try decode(task: data, with: taskName)
+        
+        return DecoderResult.task(task)
+    }
+    
+    
+    func decode(task: Data, with name: String) throws -> Task {
+        let taskType = zippedTasks.filter { keyValue in
+            return keyValue.0 == name
+            }.first?.1
+        
+        return try taskType.map { type in
+            return try type.init(data: task)
+            }.or(throw: SwiftQError.taskNotFound)
     }
     
     
     func decode(chain json: [String : Any]) throws -> Chain {
-        guard let chain = json[.chain] as? [[String : Any]] else {
-            throw SwiftQError.taskNotFound
-        }
-        
-        let tasks = try chain.map { task -> Task in
-            let name = task[.taskName] as? String ?? ""
-            guard let taskType = zippedTasks.filter({ $0.0 == name }).first?.1 else {
-                throw SwiftQError.taskNotFound
-            }
-            return try taskType.init(json: JSON(task))
-        }
-        
-        return try Chain(tasks)
+        throw SwiftQError.unimplemented
     }
     
 }
+
+
 
 enum DecoderResult {
     case chain(Chain)

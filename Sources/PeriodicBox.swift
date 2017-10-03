@@ -17,8 +17,8 @@ struct PeriodicBox: ZSettable {
     let task: Data
     
     init(_ periodicTask: PeriodicTask) throws {
-        let data = try periodicTask.serialized()
-        self.uuid = periodicTask.id.uuid
+        let data = try periodicTask.data()
+        self.uuid = periodicTask.storage.uuid
         self.score = periodicTask.frequency.nextTime.description
         self.task = data
     }
