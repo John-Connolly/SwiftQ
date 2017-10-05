@@ -10,15 +10,14 @@ import Foundation
 
 struct Decoder {
     
-    let types:  [Task.Type]
+    private let types:  [Task.Type]
     
-    private let zippedTasks: [(String , Task.Type)]
+    private let resources: [InitResource]
     
     
     init(types: [Task.Type]) {
         self.types = types
-        let taskNames = types.map(String.init(describing:))
-        self.zippedTasks = zip(taskNames, types).array
+        self.resources = types.map(InitResource.init)
     }
     
     /// Returns the correct task type based on the zipped tasks
@@ -37,13 +36,14 @@ struct Decoder {
     
     
     func decode(task: Data, with name: String) throws -> Task {
-        let taskType = zippedTasks.filter { keyValue in
-            return keyValue.0 == name
-            }.first?.1
-        
-        return try taskType.map { type in
-            return try type.init(data: task)
-            }.or(throw: SwiftQError.taskNotFound)
+        let taskType = resources
+            .filter { $0.name == name }
+            .first?
+            .type
+    
+        return try taskType
+            .map { try $0.init(data: task) }
+            .or(throw:  SwiftQError.taskNotFound)
     }
     
     
@@ -53,6 +53,17 @@ struct Decoder {
     
 }
 
+struct InitResource {
+    
+    let name: String
+    let type: Task.Type
+    
+    init(_ type: Task.Type) {
+        self.name = String(describing: type)
+        self.type = type
+    }
+    
+}
 
 
 enum DecoderResult {

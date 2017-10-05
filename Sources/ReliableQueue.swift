@@ -132,7 +132,7 @@ final class ReliableQueue {
     
     /// Pushes data into the log list
     func log(task: Task, error: Error) throws {
-        let log = try task.createLog(with: error, consumer: consumerName)
+        let log = try task.log(with: error, consumer: consumerName)
         try redisAdaptor.pipeline {
             return  [
                 .multi,

@@ -42,7 +42,7 @@ extension Task {
         self = try JSONDecoder().decode(Self.self, from: data)
     }
     
-    func createLog(with error: Error, consumer: String) throws -> Data {
+    func log(with error: Error, consumer: String) throws -> Data {
         let log = Log(message: error.localizedDescription, consumer: consumer, date: Date().unixTime)
         storage.set(log: log)
         return try data()
