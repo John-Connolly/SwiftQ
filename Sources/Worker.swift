@@ -64,12 +64,9 @@ final class Worker {
                     return
                 }
                 
-                let result = try self.decoder.decode(data: data)
-                switch result {
-              
-                case .task(let task):
-                    self.execute(task)
-                }
+                let task = try self.decoder.decode(data: data)
+                self.execute(task)
+
             } catch {
                 Logger.log("Failed to decode task")
             }
