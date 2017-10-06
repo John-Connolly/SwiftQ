@@ -33,11 +33,8 @@ class SwiftQTests: XCTestCase {
         print(String(data: encoded, encoding: .utf8)!)
         
         let decoder = Decoder(types: [Example.self])
-        let result = try! decoder.decode(data: encoded)
-        switch result {
-        case .task(let task):
-             print(task.uuid)
-        }
+        let task = try! decoder.decode(data: encoded)
+        print(task.uuid)
         
     }
     
@@ -45,41 +42,28 @@ class SwiftQTests: XCTestCase {
     func testTask() {
         let example = Example(string: String(describing: Example.self), int: 100, bool: true)
         
-        guard let json = try? example.data() else {
+        guard let data = try? example.data() else {
             XCTFail("JSON serialization failed")
             return
         }
-
-//        let jsonType = JSON(json)
-//        let string: String? = try? jsonType.get(key: "string")
-//        let int: Int? = try? jsonType.get(key: "int")
-//        let bool: Bool? = try? jsonType.get(key: "bool")
-//
-//        XCTAssertEqual(string, String(describing: Example.self))
-//        XCTAssertEqual(int, 100)
-//        XCTAssertEqual(bool, true)
-//
-//        let taskName: String? = try? jsonType.unsafeGet("taskName")
-//        let uuid: String? = try? jsonType.unsafeGet("uuid")
-//        let createdAt: Int? = try? jsonType.unsafeGet("createdAt")
-//        let taskType: String? = try? jsonType.unsafeGet("taskType")
-//
-//        XCTAssertEqual(taskName, String(describing: Example.self))
-//        XCTAssertEqual(uuid, example.uuid)
-//        XCTAssertNotNil(createdAt)
-//        XCTAssertEqual(taskType, "task")
+     
+        let task = try! Example(data: data)
+        XCTAssertEqual(task.string, example.string)
+        XCTAssertEqual(task.int, example.int)
+        XCTAssertEqual(task.bool, example.bool)
+        XCTAssertEqual(task.uuid, example.uuid)
+        
+        XCTAssertNotNil(task.storage.enqueuedAt)
+        XCTAssertEqual(task.storage.name, String(describing: Example.self))
+        XCTAssertEqual(task.storage.retryCount, example.storage.retryCount)
+    
     }
     
     func testDecoder() {
         let decoder = Decoder(types: [Example.self])
         let example = Example(string: "", int: 1, bool: true)
         let data = try! example.data()
-        let result = try! decoder.decode(data: data)
-        
-        guard case let DecoderResult.task(task) = result else {
-            XCTFail("decoding failed")
-            return
-        }
+        let task = try! decoder.decode(data: data)
         
         XCTAssertEqual(task.uuid, example.uuid)
         
@@ -129,11 +113,11 @@ class SwiftQTests: XCTestCase {
         XCTAssertEqual(pool.connections.count, 3)
         XCTAssertEqual(borrowed, "Connection")
         
-
+        
         
         DispatchQueue(label: "").asyncAfter(deadline: DispatchTime(secondsFromNow: 1)) {
             self.pool.takeBack(connection: "Connection")
-
+            
         }
         
         _ = self.pool.borrow()

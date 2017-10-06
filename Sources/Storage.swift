@@ -12,13 +12,13 @@ public final class Storage: Codable {
     
     let uuid: String
     
-    private let name: String
+    let name: String
     
-    private var createdAt: Int?
+    var enqueuedAt: Int?
     
-    private var retryCount = 0
+    var retryCount = 0
     
-    private var log: Log?
+    var log: Log?
     
     public init<T: Task>(_ type: T.Type) {
         self.name = String(describing: type)
@@ -29,7 +29,7 @@ public final class Storage: Codable {
         var container = encoder.container(keyedBy: Storage.CodingKeys.self)
         try container.encode(uuid, forKey: .uuid)
         try container.encode(name, forKey: .name)
-        try container.encode(createdAt ?? Date().unixTime, forKey: .createdAt)
+        try container.encode(enqueuedAt ?? Date().unixTime, forKey: .enqueuedAt)
         try container.encode(retryCount, forKey: .retryCount)
         try container.encodeIfPresent(log, forKey: .log)
     }
