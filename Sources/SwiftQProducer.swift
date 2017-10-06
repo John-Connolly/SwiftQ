@@ -35,11 +35,6 @@ public final class SwiftQProducer {
         try reliableQueue.enqueue(contentsOf: boxes)
     }
     
-    /// Pushes a chained task onto the work queue
-    public func enqueue(chain: Chain) throws {
-        try reliableQueue.enqueue(item: EnqueueingBox(chain))
-    }
-    
     /// Pushes a task on the scheduled queue
     public func enqueue(task: Task, time: Time) throws {
         let box = try ScheduledBox(task, when: time)

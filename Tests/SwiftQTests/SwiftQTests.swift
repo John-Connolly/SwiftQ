@@ -37,8 +37,6 @@ class SwiftQTests: XCTestCase {
         switch result {
         case .task(let task):
              print(task.uuid)
-        default:
-            break
         }
         
     }

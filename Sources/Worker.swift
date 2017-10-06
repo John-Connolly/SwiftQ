@@ -66,8 +66,7 @@ final class Worker {
                 
                 let result = try self.decoder.decode(data: data)
                 switch result {
-                case .chain(let chain):
-                    self.execute(chain)
+              
                 case .task(let task):
                     self.execute(task)
                 }
@@ -77,23 +76,6 @@ final class Worker {
         }
     }
     
-    /// Executes a chain. If one of the items in the chain fails
-    /// the remaining tasks are canceled
-    private func execute(_ chain: Chain) {
-        serialQueue.sync {
-            do {
-                try chain.execute ({ before in
-                    self.before(task: before)
-                }) { after in
-                    self.after(task: after)
-                }
-            } catch {
-                complete(chain: chain, success: false)
-                return
-            }
-            complete(chain: chain, success: true)
-        }
-    }
     
     private func execute(_ task: Task) {
         do {
@@ -123,13 +105,6 @@ final class Worker {
         }
     }
     
-    private func complete(chain: Chain, success: Bool) {
-        do {
-            try reliableQueue.complete(item: EnqueueingBox(chain), success: success)
-        } catch {
-            Logger.log(error)
-        }
-    }
     
     /// Called when the tasks fails. Note: If the tasks recovery
     /// stategy is none it will never be ran again.

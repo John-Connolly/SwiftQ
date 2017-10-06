@@ -16,7 +16,6 @@ enum JSONKey: String {
     case error
     case errorAt
     case consumer
-    case chain
     case createdAt
     case uuid
     case taskType

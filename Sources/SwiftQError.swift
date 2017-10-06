@@ -16,7 +16,6 @@ public enum SwiftQError: Swift.Error {
     case tasksNotRegistered
     case invalidConcurrency(Int)
     case invalidQueueName(String)
-    case chainFailedToInitialize([Task])
     
 }
 
@@ -29,7 +28,6 @@ extension SwiftQError: LocalizedError {
         case .tasksNotRegistered: return "No tasks have been registered"
         case .invalidConcurrency: return "Concurrency cannot be zero"
         case .invalidQueueName: return "Queue name cannot be empty string"
-        case .chainFailedToInitialize(let tasks): return "invalid tasks: \(tasks)"
         case .unimplemented: return nil
         }
     }

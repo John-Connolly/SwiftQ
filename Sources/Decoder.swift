@@ -46,11 +46,7 @@ struct Decoder {
             .or(throw:  SwiftQError.taskNotFound)
     }
     
-    
-    func decode(chain json: [String : Any]) throws -> Chain {
-        throw SwiftQError.unimplemented
-    }
-    
+
 }
 
 struct InitResource {
@@ -67,6 +63,5 @@ struct InitResource {
 
 
 enum DecoderResult {
-    case chain(Chain)
     case task(Task)
 }

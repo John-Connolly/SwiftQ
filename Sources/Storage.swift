@@ -50,11 +50,7 @@ struct Log: Codable {
 
 public enum TaskType: String {
     
-    case chain
     case task
-    case chainable
-    case injectable
-    case linkable
     case schedulable
     case periodic
     
