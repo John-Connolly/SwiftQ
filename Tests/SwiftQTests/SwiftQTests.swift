@@ -28,14 +28,6 @@ class SwiftQTests: XCTestCase {
         XCTAssertEqual(days, 86_400)
         XCTAssertEqual(weeks, 604_800)
         
-        let example = Example(string: "Hello", int: 44, bool: false)
-        let encoded = try! example.data()
-        print(String(data: encoded, encoding: .utf8)!)
-        
-        let decoder = Decoder(types: [Example.self])
-        let task = try! decoder.decode(data: encoded)
-        print(task.uuid)
-        
     }
     
     // MARK: - JSON serialization
@@ -56,6 +48,19 @@ class SwiftQTests: XCTestCase {
         XCTAssertNotNil(task.storage.enqueuedAt)
         XCTAssertEqual(task.storage.name, String(describing: Example.self))
         XCTAssertEqual(task.storage.retryCount, example.storage.retryCount)
+        
+        let log = Log(message: "hello", consumer: "world", date: 200)
+        task.storage.set(log: log)
+        
+        guard let taskData = try? task.data() else {
+            XCTFail("JSON serialization failed")
+            return
+        }
+        
+        let taskWithLog = try! Example(data: taskData)
+        XCTAssertEqual(taskWithLog.storage.log?.message, log.message)
+        XCTAssertEqual(taskWithLog.storage.log?.consumer, log.consumer)
+        XCTAssertEqual(taskWithLog.storage.log?.date, log.date)
     
     }
     
