@@ -13,8 +13,6 @@ final class Worker {
     
     private let queue = DispatchQueue(label: "com.swiftq.worker")
     
-    private let serialQueue = DispatchQueue(label: "com.swiftq.serial")
-    
     private let concurrentQueue = DispatchQueue(label: "com.swiftq.concurrent", attributes: .concurrent)
     
     private let reliableQueue: ReliableQueue
@@ -34,7 +32,10 @@ final class Worker {
         self.semaphore = DispatchSemaphore(value: concurrency)
         self.decoder = decoder
         self.middleware = middleware
-        self.reliableQueue = try ReliableQueue(queue: queue, config: config, consumer: consumerName, concurrency: concurrency)
+        self.reliableQueue = try ReliableQueue(queue: queue,
+                                               config: config,
+                                               consumer: consumerName,
+                                               concurrency: concurrency)
         try self.reliableQueue.prepare()
     }
     
