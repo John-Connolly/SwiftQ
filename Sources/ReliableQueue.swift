@@ -165,9 +165,7 @@ protocol Dequeueable {
     
 }
 
-protocol ReliableQueueable {
-    
-    associatedtype Item
+protocol ReliableQueueable: Enqueueable, Dequeueable  {
     
     func complete(item: Item, success: Bool) throws
     

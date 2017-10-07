@@ -37,6 +37,7 @@ public final class SwiftQProducer {
     
     /// Pushes a task on the scheduled queue
     public func enqueue(task: Task, time: Time) throws {
+        task.storage.set(type: .scheduled)
         let box = try ScheduledBox(task, when: time)
         try scheduledQueue.zadd(box)
     }
@@ -44,6 +45,7 @@ public final class SwiftQProducer {
     /// Pushes a task on the scheduled queue, after the task is completed it is pushed back
     /// onto the scheduled queue.
     public func enqueue(periodicTask: PeriodicTask) throws {
+        periodicTask.storage.set(type: .periodic)
         let box = try PeriodicBox(periodicTask)
         try scheduledQueue.zadd(box)
     }

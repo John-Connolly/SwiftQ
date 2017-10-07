@@ -18,11 +18,14 @@ public final class Storage: Codable {
     
     var retryCount = 0
     
+    var taskType: TaskType
+    
     var log: Log?
     
     public init<T: Task>(_ type: T.Type) {
         self.name = String(describing: type)
         self.uuid = UUID().uuidString
+        self.taskType = .task
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -31,11 +34,16 @@ public final class Storage: Codable {
         try container.encode(name, forKey: .name)
         try container.encode(enqueuedAt ?? Date().unixTime, forKey: .enqueuedAt)
         try container.encode(retryCount, forKey: .retryCount)
+        try container.encode(taskType, forKey: .taskType)
         try container.encodeIfPresent(log, forKey: .log)
     }
     
     func set(log: Log) {
         self.log = log
+    }
+    
+    func set(type: TaskType) {
+        self.taskType = type
     }
     
 }
@@ -48,14 +56,10 @@ struct Log: Codable {
     
 }
 
-public enum TaskType: String {
+public enum TaskType: String, Codable {
     
     case task
-    case schedulable
+    case scheduled
     case periodic
     
-    
-    init(_ type: String) {
-        self = TaskType.init(rawValue: type) ?? .task
-    }
 }
