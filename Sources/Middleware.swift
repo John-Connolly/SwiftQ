@@ -19,3 +19,31 @@ public protocol Middleware {
     func after(task: Task, with error: Error)
     
 }
+
+final class MiddlewareCollection {
+    
+    private let middleware: [Middleware]
+    
+    init(_ middleware: [Middleware]) {
+        self.middleware = middleware
+    }
+    
+    func before(task: Task) {
+        self.middleware.forEach { middleware in
+            middleware.before(task: task)
+        }
+    }
+    
+    func after(task: Task) {
+        self.middleware.forEach { middleware in
+            middleware.after(task: task)
+        }
+    }
+    
+    func after(task: Task, with error: Error) {
+        self.middleware.forEach { middleware in
+            middleware.after(task: task, with: error)
+        }
+    }
+    
+}

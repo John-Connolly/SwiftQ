@@ -21,7 +21,7 @@ final class Worker {
     
     private let semaphore: DispatchSemaphore
     
-    let middleware: [Middleware]
+    private let middlewares: MiddlewareCollection
     
     init(decoder: Decoder,
          config: RedisConfig,
@@ -31,7 +31,7 @@ final class Worker {
          middleware: [Middleware]) throws {
         self.semaphore = DispatchSemaphore(value: concurrency)
         self.decoder = decoder
-        self.middleware = middleware
+        self.middlewares = MiddlewareCollection(middleware)
         self.reliableQueue = try ReliableQueue(queue: queue,
                                                config: config,
                                                consumer: consumerName,
@@ -74,12 +74,13 @@ final class Worker {
     
     private func execute(_ task: Task) {
         do {
-            before(task: task)
+            
+            middlewares.before(task: task)
             try task.execute()
-            after(task: task)
+            middlewares.after(task: task)
             complete(task: task)
         } catch {
-            after(task: task, with: error)
+            middlewares.after(task: task, with: error)
             failure(task, error: error)
         }
     }
@@ -114,35 +115,6 @@ final class Worker {
             }
         } catch {
             Logger.log(error)
-        }
-    }
-}
-
-extension Worker: Middlewareable { }
-
-protocol Middlewareable: class {
-    
-    var middleware: [Middleware] { get }
-    
-}
-
-extension Middlewareable {
-    
-    func before(task: Task) {
-        self.middleware.forEach { middleware in
-            middleware.before(task: task)
-        }
-    }
-    
-    func after(task: Task) {
-        self.middleware.forEach { middleware in
-            middleware.after(task: task)
-        }
-    }
-    
-    func after(task: Task, with error: Error) {
-        self.middleware.forEach { middleware in
-            middleware.after(task: task, with: error)
         }
     }
 }
