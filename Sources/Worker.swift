@@ -61,15 +61,12 @@ final class Worker {
             
             do {
                 
-                guard let data = try self.reliableQueue.dequeue() else {
-                    return
-                }
+                try self.reliableQueue.bdequeue { data in
+                    return try self.decoder.decode(data: data)
+                    }.map(self.execute)
                 
-                let task = try self.decoder.decode(data: data)
-                self.execute(task)
-
             } catch {
-                Logger.log("Failed to decode task")
+                Logger.log(error)
             }
         }
     }
@@ -111,7 +108,7 @@ final class Worker {
             switch task.recoveryStrategy {
             case .none:
                 try reliableQueue.complete(item: EnqueueingBox(task), success: false)
-            case .retry: break
+            case .retry: throw SwiftQError.unimplemented
             case .log:
                 try reliableQueue.log(task: task, error: error)
             }

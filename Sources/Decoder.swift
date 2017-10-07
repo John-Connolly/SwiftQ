@@ -23,7 +23,6 @@ struct Decoder {
     /// Returns the correct task based on the task name in storage
     func decode(data: Foundation.Data) throws -> Task {
         let taskName = try data.jsonDictionary(key: String.self, value: Any.self).taskName()
-        
         return try decode(task: data, with: taskName)
     }
     
@@ -37,5 +36,7 @@ struct Decoder {
             .map { try $0.init(data: task) }
             .or(throw:  SwiftQError.taskNotFound)
     }
+    
+
     
 }

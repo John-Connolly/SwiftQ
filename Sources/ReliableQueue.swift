@@ -93,13 +93,13 @@ final class ReliableQueue {
     
     /// Pops the last element off the work queue and pushes it to the front of the processsing queue
     /// Blocks indefinitely if there are no items in the queue
-    func dequeue() throws -> Foundation.Data? {
+    func bdequeue(_ transform: (Foundation.Data) throws -> Task?) throws -> Task? {
         let command = Command.brpoplpush(q1: RedisKey.workQ(queue).name, q2: processingQKey, timeout: 0)
         return try redisAdaptor.execute(command).string
             .map { id in
                 return .get(key: id)
             }.flatMap { command in
-                return try redisAdaptor.execute(command).data
+                return try redisAdaptor.execute(command).data.flatMap(transform)
         }
     }
     
@@ -148,17 +148,26 @@ final class ReliableQueue {
     
 }
 
-extension ReliableQueue: Queue { }
 
-protocol Queue {
+protocol Enqueueable {
     
     associatedtype Item
     
-    associatedtype Result
-    
     func enqueue(item: Item) throws
     
-    func dequeue() throws -> Result?
+}
+
+protocol Dequeueable {
+    
+    associatedtype Item
+    
+    func bdequeue(_ transform: (Data) throws -> Item)
+    
+}
+
+protocol ReliableQueueable {
+    
+    associatedtype Item
     
     func complete(item: Item, success: Bool) throws
     
