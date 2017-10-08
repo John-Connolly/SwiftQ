@@ -19,7 +19,7 @@ final class ScheduledQueue: Monitorable {
         self.redisAdaptor = try RedisAdaptor(config: config, connections: 1)
     }
     
-    func zadd(_ boxedTask: ZSettable) throws {
+    func enqueue(_ boxedTask: ZSettable) throws {
         try redisAdaptor.pipeline {
             return [
                 .multi,
@@ -39,7 +39,7 @@ final class ScheduledQueue: Monitorable {
     }
     
     /// Pushs multiple tasks onto the work queue from the scheduled queue
-    private func transferQ(tasks: [Foundation.Data]) throws {
+    private func transfer(tasks: [Foundation.Data]) throws {
         try redisAdaptor.pipeline {
             return [
                 .multi,
@@ -51,17 +51,14 @@ final class ScheduledQueue: Monitorable {
     }
     
     
-    func poll() {
+    func monitor() {
         do {
-            guard let data = try zrangeByScore() else {
+            
+            guard let data = try zrangeByScore(), data.count > 0 else {
                 return
             }
             
-            guard data.count > 0 else {
-                return
-            }
-            
-            try transferQ(tasks: data)
+            try transfer(tasks: data)
         } catch {
             Logger.log(error)
         }

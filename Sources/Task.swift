@@ -20,8 +20,6 @@ public protocol Task: Codable {
     
 }
 
-
-
 extension Task {
     
     
@@ -36,7 +34,6 @@ extension Task {
     var uuid: String {
         return storage.uuid
     }
-    
     
     init(data: Data) throws {
         self = try JSONDecoder().decode(Self.self, from: data)

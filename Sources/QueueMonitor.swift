@@ -30,16 +30,16 @@ final class QueueMonitor {
         timer.schedule(deadline: .now(), repeating: .milliseconds(interval), leeway: .seconds(1))
         
         timer.setEventHandler {
-            self.pollQueues()
+            self.monitorQueues()
         }
         
         timer.resume()
     }
     
     /// Polls every queue in the queues array at a set interval
-    private func pollQueues() {
+    private func monitorQueues() {
         queues.forEach { queue in
-            queue.poll()
+            queue.monitor()
         }
     }
     
@@ -48,6 +48,6 @@ final class QueueMonitor {
 
 protocol Monitorable: class {
     
-    func poll()
+    func monitor()
     
 }
