@@ -48,11 +48,11 @@ public final class SwiftQConsumer {
     }
     
     public func run() -> Never {
-        worker.run()
-        
         if config.enableScheduling {
             monitor.run()
         }
+        
+        worker.run()
         
         let group = DispatchGroup()
         group.enter()
