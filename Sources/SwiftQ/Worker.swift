@@ -11,11 +11,11 @@ import Dispatch
 
 final class Worker {
     
-    private let queue = DispatchQueue(label: "com.swiftq.worker")
-    
+    private let syncQueue = DispatchQueue(label: "com.swiftq.worker")
+
     private let concurrentQueue = DispatchQueue(label: "com.swiftq.concurrent", attributes: .concurrent)
     
-    private let reliableQueue: ReliableQueue
+    private let queue: ReliableQueue
     
     private let decoder: Decoder
     
@@ -32,45 +32,44 @@ final class Worker {
         self.semaphore = DispatchSemaphore(value: concurrency)
         self.decoder = decoder
         self.middlewares = MiddlewareCollection(middleware)
-        self.reliableQueue = try ReliableQueue(queue: queue,
-                                               config: config,
-                                               consumer: consumerName,
-                                               concurrency: concurrency)
-        try self.reliableQueue.prepare()
+        self.queue = try ReliableQueue(queue: queue,
+                                       config: config,
+                                       consumer: consumerName,
+                                       concurrency: concurrency)
+        try self.queue.prepare()
     }
     
     /// Atomically transfers a task from the work queue into the
     /// processing queue then enqueues it to the worker.
     func run() {
-        queue.async { [unowned self] in
+        syncQueue.async { [unowned self] in
             repeat {
+                
                 self.semaphore.wait()
-                let workItem = self.workItem()
-                self.concurrentQueue.async(execute: workItem)
+                
+                AsyncWorker(queue: self.concurrentQueue) {
+                    defer {
+                        self.semaphore.signal()
+                    }
+                    
+                    do {
+                        
+                        let task = try self.queue.bdequeue { data in
+                            return try self.decoder.decode(data: data)
+                        }
+                        
+                        task.map(self.execute)
+                        
+                    } catch {
+                        Logger.log(error)
+                    }
+                    
+                    }.run()
+                
             } while true
         }
         
     }
-    
-    private func workItem() -> DispatchWorkItem {
-        return DispatchWorkItem { [unowned self] in
-            
-            defer {
-                self.semaphore.signal()
-            }
-            
-            do {
-                
-                try self.reliableQueue.bdequeue { data in
-                    return try self.decoder.decode(data: data)
-                    }.map(self.execute)
-                
-            } catch {
-                Logger.log(error)
-            }
-        }
-    }
-    
     
     private func execute(_ task: Task) {
         do {
@@ -89,13 +88,14 @@ final class Worker {
     /// periodic it is re-queued into the zset.
     private func complete(task: Task) {
         do {
-            switch task {
-            case let task as PeriodicTask:
+            
+            if let task = task as? PeriodicTask {
                 let box = try PeriodicBox(task)
-                try reliableQueue.requeue(box: box, success: true)
-            default:
-                try reliableQueue.complete(item: try EnqueueingBox(task), success: true)
+                try queue.requeue(box: box, success: true)
+            } else {
+                try queue.complete(item: try EnqueueingBox(task), success: true)
             }
+            
         } catch {
             Logger.log(error)
         }
@@ -106,15 +106,38 @@ final class Worker {
     /// stategy is none it will never be ran again.
     private func failure(_ task: Task, error: Error)  {
         do {
+            
             switch task.recoveryStrategy {
             case .none:
-                try reliableQueue.complete(item: EnqueueingBox(task), success: false)
+                try queue.complete(item: EnqueueingBox(task), success: false)
             case .retry: throw SwiftQError.unimplemented
             case .log:
-                try reliableQueue.log(task: task, error: error)
+                try queue.log(task: task, error: error)
             }
+            
         } catch {
             Logger.log(error)
         }
     }
+}
+
+
+final class AsyncWorker {
+    let dispatchQueue: DispatchQueue
+    let work: () -> ()
+    
+    init(queue: DispatchQueue, work: @escaping () -> ()) {
+        self.dispatchQueue = queue
+        self.work = work
+    }
+    
+    func run() {
+        let workItem = DispatchWorkItem(block: work)
+        dispatchQueue.async(execute: workItem)
+    }
+}
+
+enum Result<T> {
+    case success(T)
+    case failure(Error)
 }

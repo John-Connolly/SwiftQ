@@ -1,11 +1,20 @@
-// swift-tools-version:3.1
+// swift-tools-version:4.0
 
 import PackageDescription
 
 let package = Package(
     name: "SwiftQ",
+    products: [
+        .library(name: "SwiftQ",
+                 targets: ["SwiftQ"]),
+        ],
     dependencies: [
-        .Package(url: "https://github.com/vapor/redis.git", majorVersion: 2)
-        
+        .package(url: "https://github.com/vapor/redis.git", from: "2.1.0")
+    ],
+    targets: [
+        .target(name: "SwiftQ",
+                dependencies: ["Redis"]),
+        .testTarget(name: "SwiftQTests",
+                    dependencies: ["SwiftQ"])
     ]
 )

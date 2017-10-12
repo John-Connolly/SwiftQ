@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+// TODO: - Rename this
 public enum RecoveryStrategy {
     
     // Removes task from the queue.
