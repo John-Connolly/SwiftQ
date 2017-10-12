@@ -50,7 +50,7 @@ let configuration = Configuration(pollingInterval: 1000,
                                   enableScheduling: true,
                                   concurrency: 4,
                                   redisConfig: .development,
-                                  tasks: [Demo.self])
+                                  tasks: [EmailTask.self])
 ```
 For convenience during development RedisConfig has a static variable `development` that returns a RedisConfig with the default hostname and port.  `pollingInterval` is the interval in milliseconds that SwiftQ will poll the scheduled queue.  `enableScheduling` can be set to false in order to disable a consumer from polling the scheduled queue.  Note polling is only used for monitoring the scheduled queue which uses Redis's Sorted set type.  For all other tasks Redis's BRPOPLPUSH command is used to determine when tasks are available to be executed.  All tasks must be registered in order for SwiftQ to process them.
 
@@ -75,32 +75,22 @@ Note a single app can be both a consumer and a producer, this may make deploymen
 
 #### Creating tasks
 
-Every task must conform to the Task protocol.  The Identification property is there to allow SwiftQ to store extra information on your model, things like id, number of execution attempts etc. 
+Every task must conform to the Task protocol.  The storage property is there to allow SwiftQ to store extra information on your model, things like id, number of execution attempts etc.  Tasks automatically conform to Codable.  If you need to provide custom encoding logic include `func encode(to encoder: Encoder) throws` in your task.
 
 ```swift
 
-final class DemoTask: Task {
+final class EmailTask: Task {
     
-    let id: Identification
-    let url: String
+    let storage: Storage
+    let email: String
+    
+    init(email: String) {
+        self.storage = Storage(EmailTask.self)
+        self.email = email
+    }
     
     func execute() throws {
-        // Make request
-    }
-    
-    init(url: String) {
-        self.url = url
-        self.id = Identification()
-    }
-    
-    func json() throws -> JSON {
-        let json = ["url" : url]
-        return JSON(json)
-    }
-    
-    init(json: JSON) throws {
-        self.url = try json.get("url")
-        self.id = try Identification(json)
+        
     }
 }
 
@@ -121,9 +111,9 @@ NOTE: The task does not fire exactly at the time supplied. Rather, once that tim
 Periodic tasks have many uses.  For example a web application could poll an API every 10 minutes to collect data. SwiftQ would handle invoking code to call the API, process the results and store them in a persistent database for later use by a client.
 
 ```swift
-final class DemoTask: PeriodicTask {
+final class PollTask: PeriodicTask {
     
-    let id: Identification
+    let storage: Storage
     let url: String
     
     func execute() throws {
@@ -132,17 +122,7 @@ final class DemoTask: PeriodicTask {
     
     init(url: String) {
         self.url = url
-        self.id = Identification()
-    }
-    
-    func json() throws -> JSON {
-        let json = ["url" : url]
-        return JSON(json)
-    }
-    
-    init(json: JSON) throws {
-        self.url = try json.get("url")
-        self.id = try Identification(json)
+        self.storage = Storage(DemoTask.self)
     }
     
     var frequency: PeriodicTime {
