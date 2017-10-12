@@ -157,15 +157,16 @@ SwiftQ encodes tasks to JSON before sending them to the broker. Therefore only t
 #### JSON Format
 ```JSON
 {
-  "taskName": "Demo",
-  "args": {
-    "email": "example@example.com"
+  "storage" : {
+    "retryCount" : 0,
+    "taskType" : "task",
+    "name" : "EmailTask",
+    "enqueuedAt" : 1507815271,
+    "uuid" : "90872C7C-FCC8-4130-9872-87C619489664"
   },
-  "uuid": "40F2CD9F-5C00-470F-AC8C-F1B8EEDB5800",
-  "timestamp": 1499820672090,
-  "taskType": "task",
-  "retryCount": 0
+  "email" : "example@example.com"
 }
+
 ```
 #### Installing
 Update your Package.swift file with
