@@ -17,8 +17,6 @@ public final class SwiftQConsumer {
     
     private let config: Configuration
     
-    private let semaphore = DispatchSemaphore(value: 0)
-    
     
     public init(_ configuration: Configuration) throws {
         
@@ -49,19 +47,17 @@ public final class SwiftQConsumer {
         self.monitor = QueueMonitor(queues: [scheduledQueue], interval: configuration.pollingInterval)
     }
     
-    /// If shouldWait is true, it will wait forever.
-    public func start(shouldWait: Bool = false) {
+    public func run() -> Never {
         worker.run()
         
         if config.enableScheduling {
             monitor.run()
         }
         
-        guard shouldWait else {
-            return
-        }
-        
-        semaphore.wait()
+        let group = DispatchGroup()
+        group.enter()
+        group.wait()
+        exit(0)
     }
     
 }

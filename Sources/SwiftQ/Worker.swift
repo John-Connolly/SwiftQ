@@ -11,8 +11,6 @@ import Dispatch
 
 final class Worker {
     
-    private let syncQueue = DispatchQueue(label: "com.swiftq.worker")
-
     private let concurrentQueue = DispatchQueue(label: "com.swiftq.concurrent", attributes: .concurrent)
     
     private let queue: ReliableQueue
@@ -42,32 +40,30 @@ final class Worker {
     /// Atomically transfers a task from the work queue into the
     /// processing queue then enqueues it to the worker.
     func run() {
-        syncQueue.async { [unowned self] in
-            repeat {
+        repeat {
+            
+            semaphore.wait()
+            
+            AsyncWorker(queue: concurrentQueue) {
+                defer {
+                    self.semaphore.signal()
+                }
                 
-                self.semaphore.wait()
-                
-                AsyncWorker(queue: self.concurrentQueue) {
-                    defer {
-                        self.semaphore.signal()
+                do {
+                    
+                    let task = try self.queue.bdequeue { data in
+                        return try self.decoder.decode(data: data)
                     }
                     
-                    do {
-                        
-                        let task = try self.queue.bdequeue { data in
-                            return try self.decoder.decode(data: data)
-                        }
-                        
-                        task.map(self.execute)
-                        
-                    } catch {
-                        Logger.log(error)
-                    }
+                    task.map(self.execute)
                     
-                    }.run()
+                } catch {
+                    Logger.log(error)
+                }
                 
-            } while true
-        }
+                }.run()
+            
+        } while true
         
     }
     
@@ -118,22 +114,6 @@ final class Worker {
         } catch {
             Logger.log(error)
         }
-    }
-}
-
-
-final class AsyncWorker {
-    let dispatchQueue: DispatchQueue
-    let work: () -> ()
-    
-    init(queue: DispatchQueue, work: @escaping () -> ()) {
-        self.dispatchQueue = queue
-        self.work = work
-    }
-    
-    func run() {
-        let workItem = DispatchWorkItem(block: work)
-        dispatchQueue.async(execute: workItem)
     }
 }
 
