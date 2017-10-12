@@ -117,8 +117,8 @@ final class PollTask: PeriodicTask {
     let url: String
     
     init(url: String) {
+        self.storage = Storage(PollTask.self)
         self.url = url
-        self.storage = Storage(DemoTask.self)
     }
     
     func execute() throws {
