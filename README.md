@@ -116,13 +116,13 @@ final class PollTask: PeriodicTask {
     let storage: Storage
     let url: String
     
-    func execute() throws {
-        // Make request
-    }
-    
     init(url: String) {
         self.url = url
         self.storage = Storage(DemoTask.self)
+    }
+    
+    func execute() throws {
+        // Make request
     }
     
     var frequency: PeriodicTime {
