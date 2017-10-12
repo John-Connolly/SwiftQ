@@ -6,7 +6,7 @@
         <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
     </a>
     <a href="https://swift.org">
-        <img src="http://img.shields.io/badge/swift-3.1-brightgreen.svg" alt="Swift 3.1">
+        <img src="http://img.shields.io/badge/swift-4.0-brightgreen.svg" alt="Swift 4.0">
     </a>
 </p>
 
@@ -153,25 +153,6 @@ final class DemoTask: PeriodicTask {
 ```
 This task will run at 5:30 am every day. 
 Periodic tasks must conform to the PeriodicTask protocol.
-
-####  Chaining Tasks
-Chaining encourages small single purpose tasks, allowing for easier testing.  It is supported via a set of protocols   Chainable, Linkable and Injectable.   
-
-```swift
-let addition = Add(5,5)
-let multiplication = Multiply(by: 5)
-let division = Divide(by: 5)
-        
-let chain = Chain(addition)
-            .chain(task: multiplication)
-            .chain(task: division)
-        
-try producer.enqueue(chain: chain)
-```
-This chain represents (5 + 5) x 5 / 5
-
-Chains are run in a serial queue.  If one of the tasks in a chain throws an error, the remaining tasks are canceled.
-Note: Chaining a task to the same task instance will result in undefined behavior.
 
 ####  Advanced Usage
 By default all consumers consume tasks from the same queue.  You may want to specify a custom queue which only certain tasks are routed to.  To do this just add this to your task
