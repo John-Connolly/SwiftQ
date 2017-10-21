@@ -9,6 +9,7 @@ import Foundation
 import Dispatch
 
 final class AsyncWorker {
+    
     let dispatchQueue: DispatchQueue
     let work: () -> ()
     
