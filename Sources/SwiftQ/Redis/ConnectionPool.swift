@@ -18,7 +18,7 @@ final class ConnectionPool<T> {
     private let max: Int
     
     private let semaphore: DispatchSemaphore
-    /// Semaphore seems to perform much better that a serial queue
+    /// Semaphore seems to perform much better than a serial queue
     /// Probably related to the extra heap allocation of the sync { } closure.
     private let lock = DispatchSemaphore(value: 1)
     

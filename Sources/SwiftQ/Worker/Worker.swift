@@ -71,9 +71,12 @@ final class Worker {
         do {
             
             middlewares.before(task: task)
+            
             try task.execute()
+            
             middlewares.after(task: task)
             complete(task: task)
+            
         } catch {
             middlewares.after(task: task, with: error)
             failure(task, error: error)
