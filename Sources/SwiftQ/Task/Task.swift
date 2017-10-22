@@ -50,12 +50,12 @@ extension Task {
         return try encoder.encode(self)
     }
     
-    func retry() -> Bool {
-        guard case let RecoveryStrategy.retry(retries) = recoveryStrategy, retries > storage.retryCount else {
-            return false
-        }
+    func shouldRetry(_ retries: Int) -> Bool {
+        return retries > storage.retryCount
+    }
+    
+    func retry() {
         storage.incRetry()
-        return true
     }
     
 }
