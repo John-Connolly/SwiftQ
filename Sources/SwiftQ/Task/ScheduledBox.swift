@@ -19,8 +19,8 @@ struct ScheduledBox:  ZSettable {
     
     init(_ task: Task, when time: Time) throws {
         let time = Date().unixTime + time.unixTime
-        let data = try task.serialized()
-        self.uuid = task.id.uuid
+        let data = try task.data()
+        self.uuid = task.storage.uuid
         self.score = time.description
         self.task = data
     }

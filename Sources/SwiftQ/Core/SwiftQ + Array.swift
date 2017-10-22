@@ -20,11 +20,4 @@ extension Array {
         return array
     }
     
-    func reduce<A>(into initial: A, _ combine: (inout A, Iterator.Element) -> ()) -> A {
-        var result = initial
-        for element in self {
-            combine(&result, element)
-        }
-        return result
-    }
 }

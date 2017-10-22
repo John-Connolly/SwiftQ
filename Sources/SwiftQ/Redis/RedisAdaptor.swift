@@ -34,7 +34,7 @@ final class RedisAdaptor: Adaptor {
         defer {
             pool.takeBack(connection: client)
         }
-        return VaporRedisResponse(response: try client.command(Redis.Command(command.rawValue), command.params))
+        return RedisResponse(response: try client.command(Redis.Command(command.rawValue), command.params))
     }
 
     @discardableResult
@@ -48,7 +48,7 @@ final class RedisAdaptor: Adaptor {
         try commands.forEach { command in
             try pipeline.enqueue(Redis.Command(command.rawValue), command.params)
         }
-        return try pipeline.execute().map(VaporRedisResponse.init)
+        return try pipeline.execute().map(RedisResponse.init)
     }
     
 }

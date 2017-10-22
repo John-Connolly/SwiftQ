@@ -93,13 +93,13 @@ final class ReliableQueue {
     
     /// Pops the last element off the work queue and pushes it to the front of the processsing queue
     /// Blocks indefinitely if there are no items in the queue
-    func dequeue() throws -> Foundation.Data? {
+    func bdequeue(_ transform: (Foundation.Data) throws -> Task?) throws -> Task? {
         let command = Command.brpoplpush(q1: RedisKey.workQ(queue).name, q2: processingQKey, timeout: 0)
         return try redisAdaptor.execute(command).string
             .map { id in
                 return .get(key: id)
             }.flatMap { command in
-                return try redisAdaptor.execute(command).data
+                return try redisAdaptor.execute(command).data.flatMap(transform)
         }
     }
     
@@ -119,20 +119,35 @@ final class ReliableQueue {
     }
     
     /// Re-queues a periodic job in the zset
-    func requeue(box: ZSettable, success: Bool) throws {
+    func requeue(item: ZSettable, success: Bool) throws {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             return [
-                .lrem(key: processingQKey, count: 0, value: box.uuid),
+                .lrem(key: processingQKey, count: 0, value: item.uuid),
                 .incr(key: incrKey),
-                .zadd(queue: RedisKey.scheduledQ.name, score: box.score, value: box.uuid)
+                .zadd(queue: RedisKey.scheduledQ.name, score: item.score, value: item.uuid)
+            ]
+        }
+    }
+    
+    /// Requeues the task after a failure.
+    func requeue(item: EnqueueingBox, success: Bool) throws {
+        let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
+        try redisAdaptor.pipeline {
+            return [
+                .multi,
+                .lrem(key: processingQKey, count: 0, value: item.uuid),
+                .incr(key: incrKey),
+                .set(key: item.uuid, value: item.task),
+                .lpush(key: RedisKey.workQ(queue).name, values: [item.uuid]),
+                .exec
             ]
         }
     }
     
     /// Pushes data into the log list
     func log(task: Task, error: Error) throws {
-        let log = try task.createLog(with: error, consumer: consumerName)
+        let log = try task.log(with: error, consumer: consumerName)
         try redisAdaptor.pipeline {
             return  [
                 .multi,
@@ -148,17 +163,24 @@ final class ReliableQueue {
     
 }
 
-extension ReliableQueue: Queue { }
 
-protocol Queue {
+protocol Enqueueable {
     
     associatedtype Item
     
-    associatedtype Result
-    
     func enqueue(item: Item) throws
     
-    func dequeue() throws -> Result?
+}
+
+protocol Dequeueable {
+    
+    associatedtype Item
+    
+    func bdequeue(_ transform: (Data) throws -> Item)
+    
+}
+
+protocol ReliableQueueable: Enqueueable, Dequeueable  {
     
     func complete(item: Item, success: Bool) throws
     

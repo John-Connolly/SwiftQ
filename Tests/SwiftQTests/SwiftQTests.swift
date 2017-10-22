@@ -1,4 +1,5 @@
 import XCTest
+import Dispatch
 @testable import SwiftQ
 @testable import Redis
 
@@ -34,41 +35,41 @@ class SwiftQTests: XCTestCase {
     func testTask() {
         let example = Example(string: String(describing: Example.self), int: 100, bool: true)
         
-        guard let json = try? example.fullJSON() else {
+        guard let data = try? example.data() else {
+            XCTFail("JSON serialization failed")
+            return
+        }
+     
+        let task = try! Example(data: data)
+        XCTAssertEqual(task.string, example.string)
+        XCTAssertEqual(task.int, example.int)
+        XCTAssertEqual(task.bool, example.bool)
+        XCTAssertEqual(task.uuid, example.uuid)
+        
+        XCTAssertNotNil(task.storage.enqueuedAt)
+        XCTAssertEqual(task.storage.name, String(describing: Example.self))
+        XCTAssertEqual(task.storage.retryCount, example.storage.retryCount)
+        
+        let log = Log(message: "hello", consumer: "world", date: 200)
+        task.storage.set(log: log)
+        
+        guard let taskData = try? task.data() else {
             XCTFail("JSON serialization failed")
             return
         }
         
-        let jsonType = JSON(json)
-        let string: String? = try? jsonType.get(key: "string")
-        let int: Int? = try? jsonType.get(key: "int")
-        let bool: Bool? = try? jsonType.get(key: "bool")
-        
-        XCTAssertEqual(string, String(describing: Example.self))
-        XCTAssertEqual(int, 100)
-        XCTAssertEqual(bool, true)
-        
-        let taskName: String? = try? jsonType.unsafeGet("taskName")
-        let uuid: String? = try? jsonType.unsafeGet("uuid")
-        let createdAt: Int? = try? jsonType.unsafeGet("createdAt")
-        let taskType: String? = try? jsonType.unsafeGet("taskType")
-        
-        XCTAssertEqual(taskName, String(describing: Example.self))
-        XCTAssertEqual(uuid, example.uuid)
-        XCTAssertNotNil(createdAt)
-        XCTAssertEqual(taskType, "task")
+        let taskWithLog = try! Example(data: taskData)
+        XCTAssertEqual(taskWithLog.storage.log?.message, log.message)
+        XCTAssertEqual(taskWithLog.storage.log?.consumer, log.consumer)
+        XCTAssertEqual(taskWithLog.storage.log?.date, log.date)
+    
     }
     
     func testDecoder() {
         let decoder = Decoder(types: [Example.self])
         let example = Example(string: "", int: 1, bool: true)
-        let data = try! example.serialized()
-        let result = try! decoder.decode(data: data)
-        
-        guard case let DecoderResult.task(task) = result else {
-            XCTFail("decoding failed")
-            return
-        }
+        let data = try! example.data()
+        let task = try! decoder.decode(data: data)
         
         XCTAssertEqual(task.uuid, example.uuid)
         
@@ -118,11 +119,11 @@ class SwiftQTests: XCTestCase {
         XCTAssertEqual(pool.connections.count, 3)
         XCTAssertEqual(borrowed, "Connection")
         
-
+        
         
         DispatchQueue(label: "").asyncAfter(deadline: DispatchTime(secondsFromNow: 1)) {
             self.pool.takeBack(connection: "Connection")
-
+            
         }
         
         _ = self.pool.borrow()
@@ -168,35 +169,19 @@ extension String {
 // MARK: - Mocks
 final class Example: Task {
     
-    let id: Identification
+    let storage: Storage
     
     let string: String
     let int: Int
     let bool: Bool
     
-    
     func execute() throws { }
     
-    func json() throws -> JSON {
-        return JSON([
-            "string" : string,
-            "int": int,
-            "bool": bool
-            ]
-        )
-    }
-    
     init(string: String, int: Int, bool: Bool) {
-        self.id = Identification()
+        self.storage = Storage(Example.self)
         self.string = string
         self.int = int
         self.bool = bool
     }
     
-    init(json: JSON) throws {
-        self.id = try Identification(json)
-        self.string = try json.get(key: "string")
-        self.int = try json.get(key: "int")
-        self.bool = try json.get(key: "bool")
-    }
 }

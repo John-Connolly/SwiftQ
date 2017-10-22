@@ -1,5 +1,5 @@
 //
-//  VaporRedisResponse.swift
+//  RedisResponse.swift
 //  SwiftQ
 //
 //  Created by John Connolly on 2017-07-06.
@@ -9,7 +9,7 @@
 import Foundation
 import Redis
 
-struct VaporRedisResponse: RedisResponseRepresentable {
+struct RedisResponse: RedisResponseRepresentable {
     
     let response: Redis.Data?
     

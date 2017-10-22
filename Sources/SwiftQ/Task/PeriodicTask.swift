@@ -13,11 +13,3 @@ public protocol PeriodicTask: Task {
     
     var frequency: PeriodicTime { get }
 }
-
-extension PeriodicTask {
-    
-    var taskType: TaskType {
-        return .periodic
-    }
-
-}

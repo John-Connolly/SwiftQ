@@ -20,16 +20,11 @@ struct EnqueueingBox {
 
 extension EnqueueingBox {
     
-    init(_ chain: Chain) throws {
-        self.uuid = chain.uuid
-        self.queue = "default"
-        self.task = try chain.serialized()
-    }
-    
+   
     init(_ task: Task) throws {
         self.uuid = task.uuid
         self.queue = task.queue
-        self.task = try task.serialized()
+        self.task = try task.data()
     }
     
 }
