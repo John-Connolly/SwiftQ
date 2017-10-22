@@ -109,8 +109,9 @@ final class Worker {
             switch task.recoveryStrategy {
             case .none:
                 try queue.complete(item: EnqueueingBox(task), success: false)
-            case .retry:
-                if task.retry() {
+            case .retry(let retries):
+                if task.shouldRetry(retries) {
+                    task.retry()
                     try queue.requeue(item: EnqueueingBox(task), success: false)
                 } else {
                     try queue.complete(item: EnqueueingBox(task), success: false)
