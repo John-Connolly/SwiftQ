@@ -46,6 +46,10 @@ public final class Storage: Codable {
         self.taskType = type
     }
     
+    func incRetry() {
+        retryCount += 1
+    }
+    
 }
 
 struct Log: Codable {

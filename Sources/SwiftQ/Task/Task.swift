@@ -50,6 +50,14 @@ extension Task {
         return try encoder.encode(self)
     }
     
+    func retry() -> Bool {
+        guard case let RecoveryStrategy.retry(retries) = recoveryStrategy, retries > storage.retryCount else {
+            return false
+        }
+        storage.incRetry()
+        return true
+    }
+    
 }
 
 protocol Loggable: class {

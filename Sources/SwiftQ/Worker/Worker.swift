@@ -90,7 +90,7 @@ final class Worker {
             
             if let task = task as? PeriodicTask {
                 let box = try PeriodicBox(task)
-                try queue.requeue(box: box, success: true)
+                try queue.requeue(item: box, success: true)
             } else {
                 try queue.complete(item: try EnqueueingBox(task), success: true)
             }
@@ -109,7 +109,12 @@ final class Worker {
             switch task.recoveryStrategy {
             case .none:
                 try queue.complete(item: EnqueueingBox(task), success: false)
-            case .retry: throw SwiftQError.unimplemented
+            case .retry:
+                if task.retry() {
+                    try queue.requeue(item: EnqueueingBox(task), success: false)
+                } else {
+                    try queue.complete(item: EnqueueingBox(task), success: false)
+                }
             case .log:
                 try queue.log(task: task, error: error)
             }

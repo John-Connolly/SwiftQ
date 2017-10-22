@@ -119,13 +119,28 @@ final class ReliableQueue {
     }
     
     /// Re-queues a periodic job in the zset
-    func requeue(box: ZSettable, success: Bool) throws {
+    func requeue(item: ZSettable, success: Bool) throws {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             return [
-                .lrem(key: processingQKey, count: 0, value: box.uuid),
+                .lrem(key: processingQKey, count: 0, value: item.uuid),
                 .incr(key: incrKey),
-                .zadd(queue: RedisKey.scheduledQ.name, score: box.score, value: box.uuid)
+                .zadd(queue: RedisKey.scheduledQ.name, score: item.score, value: item.uuid)
+            ]
+        }
+    }
+    
+    /// Requeues the task after a failure.
+    func requeue(item: EnqueueingBox, success: Bool) throws {
+        let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
+        try redisAdaptor.pipeline {
+            return [
+                .multi,
+                .lrem(key: processingQKey, count: 0, value: item.uuid),
+                .incr(key: incrKey),
+                .set(key: item.uuid, value: item.task),
+                .lpush(key: RedisKey.workQ(queue).name, values: [item.uuid]),
+                .exec
             ]
         }
     }
