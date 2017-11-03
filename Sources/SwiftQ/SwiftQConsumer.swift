@@ -28,7 +28,7 @@ public final class SwiftQConsumer {
             throw SwiftQError.invalidConcurrency(configuration.concurrency)
         }
         
-        guard configuration.queue.characters.count > 0 else {
+        guard configuration.queue.count > 0 else {
             throw SwiftQError.invalidQueueName(configuration.queue)
         }
         
