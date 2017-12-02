@@ -51,3 +51,83 @@ protocol Monitorable: class {
     func monitor()
     
 }
+
+
+final class ServiceDispatcher {
+    
+    private let eventLoop: DispatchQueue
+    private let services: [Service]
+    private var timers: [DispatchSourceTimer]
+    
+    init(services: [Service.Type]) {
+        self.eventLoop = DispatchQueue(label: "com.swiftq.service.dispatcher.main")
+        self.services = services.map { $0.init() }
+        self.timers = []
+    }
+    
+    func start() {
+        
+        timers = services.map { service -> DispatchSourceTimer in
+            
+            let source = DispatchSource.makeTimerSource(queue: eventLoop)
+            source.schedule(deadline: .now(), repeating: service.repeating, leeway: .seconds(1))
+            
+            source.setEventHandler {
+                
+                service.event()
+                
+            }
+            
+            source.resume()
+
+            return source
+        }
+        
+    }
+    
+}
+
+
+protocol Service: EmptyInitializable {
+    
+    var repeating: DispatchTimeInterval { get }
+    
+    func event() // Could call this handler?
+    
+}
+
+struct MonitorService: Service {
+    
+    let repeating = DispatchTimeInterval.seconds(1)
+    
+    func event() {
+        print("working")
+    }
+    
+}
+
+
+struct HeartBeatService: Service {
+    
+    let repeating = DispatchTimeInterval.never
+    
+    func event() {
+        print("heart beat")
+    }
+    
+}
+
+
+protocol EmptyInitializable {
+    
+    init()
+    
+}
+
+
+
+
+
+
+
+

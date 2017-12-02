@@ -17,6 +17,8 @@ public final class SwiftQConsumer {
     
     private let config: Configuration
     
+    let dispatcher = ServiceDispatcher(services: [MonitorService.self, HeartBeatService.self])
+    
     
     public init(_ configuration: Configuration) throws {
         
@@ -49,7 +51,9 @@ public final class SwiftQConsumer {
     
     public func run() -> Never {
         if config.enableScheduling {
-            monitor.run()
+           
+            dispatcher.start()
+//            monitor.run()
         }
         
         worker.run()

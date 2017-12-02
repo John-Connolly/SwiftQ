@@ -11,6 +11,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/redis.git", from: "2.1.0")
     ],
     targets: [
+        .target(name: "Development", dependencies: ["SwiftQ"]),
         .target(name: "SwiftQ", dependencies: ["Redis"]),
         .testTarget(name: "SwiftQTests", dependencies: ["SwiftQ"])
     ]
