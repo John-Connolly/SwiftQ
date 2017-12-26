@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct RedisConfig {
+public struct RedisConfiguration {
     
     let redisDB: Int?
     
@@ -17,7 +17,7 @@ public struct RedisConfig {
     
     let password: String?
     
-    public static var development: RedisConfig {
+    public static var development: RedisConfiguration {
         return .init(redisDB: nil, hostname: "127.0.0.1", port: 6379, password: nil)
     }
     

@@ -66,3 +66,15 @@ import Redis
 //    
 //}
 
+
+
+
+final class RedisAdaptor {
+    
+    init(config: RedisConfiguration, connections: Int) {
+        
+        
+    }
+    
+}
+

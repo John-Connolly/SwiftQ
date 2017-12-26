@@ -19,24 +19,24 @@ public struct Configuration {
     /// 4 separate redis connections while its waiting for work.
     let concurrency: Int
     
-    let redisConfig: RedisConfig
+    let redisConfig: RedisConfiguration
     
     let tasks: [Task.Type]
     /// Used in order to specify a custom queue to consume from
     let queue: String
     /// Used for consumer specific processing queues.
     /// If not provided the servers hostname will be used.
-    let consumerName: String?
+    let consumerName: String
     
     let middleware: [Middleware]
     
     public init(pollingInterval: Int,
          enableScheduling: Bool,
          concurrency: Int,
-         redisConfig: RedisConfig,
+         redisConfig: RedisConfiguration,
          tasks: [Task.Type],
          queue: String = "default",
-         consumerName: String? = nil,
+         consumerName: String?,
          middleware: [Middleware] = []) {
         
         self.pollingInterval = pollingInterval
@@ -45,7 +45,7 @@ public struct Configuration {
         self.redisConfig = redisConfig
         self.tasks = tasks
         self.queue = queue
-        self.consumerName = consumerName
+        self.consumerName = consumerName ?? Host().name
         self.middleware = middleware
     }
     

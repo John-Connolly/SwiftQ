@@ -9,23 +9,15 @@ import Foundation
 import Redis
 import Async
 
-
 public final class Producer {
     
+    private let client: RedisClient
     
-
-    
-//    private let clientFuture: Future<RedisClient>
-//    
-//    private let eventLoop: EventLoop
-    
-    public init(on queue: DispatchQueue) throws {
-//        self.clientFuture = try RedisClient.connect(on: queue)
-//        self.eventLoop = queue
+    public init(on queue: EventLoop) throws {
+        self.client = try RedisClient.connect(on: queue)
     }
     
-    
-//    public func enqueue(task: Task) throws -> Future<[RedisData]>  {
+    public func enqueue(_ task: Task) throws -> Future<Void>  {
 //        let pipeline = client.makePipeline()
 //        try pipeline.enqueue(command: "MULTI")
 //        try pipeline.enqueue(command: "LPUSH", arguments: [RedisData(bulk: "myList"),RedisData(bulk: task.uuid)])
@@ -34,9 +26,12 @@ public final class Producer {
 //        try pipeline.enqueue(command: "SET", arguments: [RedisData(bulk: task.uuid), RedisData(bulk: string)])
 //        try pipeline.enqueue(command: "EXEC")
 //        return try pipeline.execute()
-//    }
+        
+        let data = RedisData.bulkString(try task.data())
+        return client.set(data, forKey: task.uuid)
+    }
     
-    public func enqueue(tasks: [Task]) throws -> Future<[RedisData]>? {
+    public func enqueue(contentsOf tasks: [Task]) throws -> Future<Void> {
         
 //        let promise = Promise<[RedisData]>()
         
@@ -77,10 +72,8 @@ public final class Producer {
 //        }
 //        return promise.future
         
-        return nil
+        return .done
     }
-    
-    
-    
+
     
 }

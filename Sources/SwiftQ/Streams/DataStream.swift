@@ -11,7 +11,7 @@ import Redis
 
 public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     
-    public typealias Output = RedisData
+    public typealias Output = Data
     
     private let eventLoop: EventLoop
     private let client: RedisClient
@@ -21,15 +21,21 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     /// The amount of requested output remaining
     private var requestedOutputRemaining: UInt = 0
     
-    public init(on eventLoop: EventLoop) {
+    public init(with configuration: Configuration, on eventLoop: EventLoop) throws {
         self.eventLoop = eventLoop
-        self.client = try! RedisClient.connect(on: eventLoop)
+        self.client = try RedisClient.connect(on: eventLoop)
     }
     
     private func accept() {
         eventLoop.async {
             
             self.client.run(command: "BRPOPLPUSH", arguments: ["myList","newList","0"]).do { data in
+                
+                guard let data = data.data else {
+                    self.downstream?.error(SwiftQError.unimplemented)
+                    return
+                }
+                
                 self.downstream?.next(data)
                 
                 }.catch { error in
