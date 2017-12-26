@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftQ
+import Async
 
 final class EmailTask: Task {
 
@@ -18,8 +19,8 @@ final class EmailTask: Task {
         self.email = email
     }
     
-    func execute() throws {
-
+    func execute() -> Future<()> {
+        return Future(())
     }
     
 }

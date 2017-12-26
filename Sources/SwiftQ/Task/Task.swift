@@ -7,12 +7,13 @@
 //
 
 import Foundation
+import Async
 
 public protocol Task: Codable {
     
     var storage: Storage { get }
     
-    func execute() throws 
+    func execute() -> Future<()>
     
     var recoveryStrategy: RecoveryStrategy { get }
     
