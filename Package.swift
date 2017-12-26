@@ -8,13 +8,14 @@ let package = Package(
         .library(name: "SwiftQ", targets: ["SwiftQ"]),
         ],
     dependencies: [
-      .package(url: "https://github.com/vapor/vapor.git", .branch("more-performance-again")),
-    .package(url: "https://github.com/IBM-Swift/Kitura-redis.git", .exact("2.0.0")),
+      .package(url: "https://github.com/IBM-Swift/Kitura-redis.git", .exact("2.0.0")),
+      .package(url: "https://github.com/vapor/redis.git", .branch("beta")),
+      .package(url: "https://github.com/vapor/async.git", .branch("beta")),
 //       .package(url: "https://github.com/vapor/vapor.git", .exact("3.0.0-alpha.x"))
     ],
     targets: [
         .target(name: "Dev", dependencies: ["SwiftQ"]),
-        .target(name: "SwiftQ", dependencies: ["Redis","SwiftRedis"]),
+        .target(name: "SwiftQ", dependencies: ["Redis","SwiftRedis", "Async"]),
 
         .testTarget(name: "SwiftQTests", dependencies: ["SwiftQ"])
     ]

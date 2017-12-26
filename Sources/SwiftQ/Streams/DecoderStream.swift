@@ -8,7 +8,7 @@
 import Foundation
 import Async
 
-
+/*
 final class DecoderStream: Async.Stream {
     
     typealias Input = Foundation.Data
@@ -65,3 +65,4 @@ final class DecoderStream: Async.Stream {
     
     
 }
+*/

@@ -15,13 +15,13 @@ public final class Producer {
     
 
     
-    private let clientFuture: Future<RedisClient>
-    
-    private let eventLoop: EventLoop
+//    private let clientFuture: Future<RedisClient>
+//    
+//    private let eventLoop: EventLoop
     
     public init(on queue: DispatchQueue) throws {
-        self.clientFuture = try RedisClient.connect(on: queue)
-        self.eventLoop = queue
+//        self.clientFuture = try RedisClient.connect(on: queue)
+//        self.eventLoop = queue
     }
     
     
@@ -36,28 +36,28 @@ public final class Producer {
 //        return try pipeline.execute()
 //    }
     
-    public func enqueue(tasks: [Task]) throws -> Future<[RedisData]> {
+    public func enqueue(tasks: [Task]) throws -> Future<[RedisData]>? {
         
 //        let promise = Promise<[RedisData]>()
         
-        let pipe = clientFuture.flatMap { client -> Future<RedisPipeline> in
-            let promise = Promise<RedisPipeline>()
-            promise.complete(client.makePipeline())
-            return promise.future
-        }
-        
-        return pipe.flatMap { pipeline -> Future<[RedisData]> in
-            try! pipeline.enqueue(command: "MULTI")
-            
-            var args: [RedisData] = [RedisData(bulk: "myList")]
-            let ids = tasks.map { RedisData(bulk: $0.uuid) }
-            args.append(contentsOf: ids)
-            try! pipeline.enqueue(command: "LPUSH", arguments: args)
-            
-            try! pipeline.enqueue(command: "EXEC")
-            
-            return try! pipeline.execute()
-        }
+//        let pipe = clientFuture.flatMap { client -> Future<RedisPipeline> in
+//            let promise = Promise<RedisPipeline>()
+//            promise.complete(client.makePipeline())
+//            return promise.future
+//        }
+//
+//        return pipe.flatMap { pipeline -> Future<[RedisData]> in
+//            try! pipeline.enqueue(command: "MULTI")
+//
+//            var args: [RedisData] = [RedisData(bulk: "myList")]
+//            let ids = tasks.map { RedisData(bulk: $0.uuid) }
+//            args.append(contentsOf: ids)
+//            try! pipeline.enqueue(command: "LPUSH", arguments: args)
+//
+//            try! pipeline.enqueue(command: "EXEC")
+//
+//            return try! pipeline.execute()
+//        }
         
 //        eventLoop.queue.async {
 //            let pipeline = self.client.makePipeline()
@@ -76,6 +76,8 @@ public final class Producer {
 //                }
 //        }
 //        return promise.future
+        
+        return nil
     }
     
     
