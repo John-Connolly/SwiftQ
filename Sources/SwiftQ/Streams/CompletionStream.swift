@@ -30,5 +30,13 @@ final class CompletionStream: Async.InputStream {
         }
     }
     
+    func onSuccess() {
+        
+    }
+    
+    func onError() {
+        
+    }
+    
     
 }

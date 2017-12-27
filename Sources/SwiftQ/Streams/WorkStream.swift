@@ -40,10 +40,10 @@ final class WorkStream: Async.Stream, Async.ConnectionContext  {
                 }.catch { error in
                    self.downstream?.error(error) // Pass this error along. Next stream must handle this.
                 }
-            
-            
         }
+        
     }
+    
     /// TODO: Figure out how requesting upstream should work.
     func connection(_ event: ConnectionEvent) {
         switch event {

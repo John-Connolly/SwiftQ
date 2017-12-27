@@ -19,7 +19,7 @@ final class EmailTask: Task {
         self.email = email
     }
     
-    func execute() -> Future<()> {
+    func execute() -> Future<Void> {
         print("Testing")
         return Future(())
     }
