@@ -41,7 +41,7 @@ Examples of this are
 
 It is recommended that a separate Redis database is used to avoid conflicting name space.
 ```swift
-let redisConfig = RedisConfig(redisDB: 0, hostname: "127.0.0.1", port: 6379, password: nil)
+let redisConfig = RedisConfiguration(redisDB: 0, hostname: "127.0.0.1", port: 6379, password: nil)
 
 ```
 
@@ -89,7 +89,7 @@ final class EmailTask: Task {
         self.email = email
     }
     
-    func execute() throws {
+    func execute() -> Future<Void> {
         
     }
 }
@@ -121,7 +121,7 @@ final class PollTask: PeriodicTask {
         self.url = url
     }
     
-    func execute() throws {
+    func execute() -> Future<Void> {
         // Make request
     }
     
@@ -168,6 +168,16 @@ SwiftQ encodes tasks to JSON before sending them to the broker. Therefore only t
 }
 
 ```
+### Architecture
+Under the hood SwiftQ is a classic producer-consumer problem whereby a Redis queue is effectively an unbounded producer.  In order to limit memory usage and increase performance almost everything is a reactive-stream.  Reactive streams provide non-blocking back pressure which is the key to SwiftQ’s low memory usage and high performance.
+
+SwiftQ was designed in a way to effectively eliminate the need for locking resources.  It achieves this by having no shared state between threads.  Before version 1.0, SwiftQ had a thread safe connection pool.  This created a lot of contention when multiple threads were demanding a connection.
+
+#### Eventloops
+SwiftQ leverages Vapors Redis client.  The Redis Client uses asynchronous IO this helps SwiftQ utilize your CPU to its full capacity.  There are three main types of eventLoops Epoll, Kqueue and Dispatch.   A dispatch event loop is just a dispatch queue. The Epoll and Kqueue event loops are more optimized for asynchronous IO.
+
+
+
 #### Installing
 Update your Package.swift file with
 
