@@ -10,9 +10,7 @@ import Async
 
 public final class App {
     
-    
     private let config: Configuration
-//    private let eventLoops: [EventLoop]
     private let consumers: [Consumer]
     
     // FIXME: Specify event loop type. KQUEUE, EPOLL, DISPATCH
@@ -37,7 +35,7 @@ public final class App {
         self.config = configuration
         
         self.consumers = try (1...configuration.concurrency).map { num in
-            let eventLoop =  DispatchEventLoop(label: "swiftQ.eventloop.\(num)")
+            let eventLoop = DispatchEventLoop(label: "swiftQ.eventloop.\(num)")
             return try Consumer(configuration, on: eventLoop)
         }
         

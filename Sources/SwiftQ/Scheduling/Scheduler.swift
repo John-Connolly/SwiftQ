@@ -15,9 +15,9 @@ final class Scheduler {
     private var timers: [DispatchSourceTimer]
     private let container: Container
     
-    init(services: [Process.Type], container: Container) {
+    init(services: [Process.Type], container: Container) throws {
         self.eventLoop = DispatchQueue(label: "com.swiftq.service.dispatcher.main")
-        self.processes = services.map { $0.init() }
+        self.processes = try services.map { try $0.init() }
         self.container = container
         self.timers = []
     }

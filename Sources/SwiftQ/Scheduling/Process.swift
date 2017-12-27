@@ -16,5 +16,5 @@ protocol Process: EmptyInitializable {
 }
 
 protocol EmptyInitializable {
-    init()
+    init() throws
 }
