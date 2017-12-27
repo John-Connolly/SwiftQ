@@ -146,6 +146,9 @@ You will also need to specify the custom queue in the consumer configuration.
 
 Note: Consumers can only consume from one queue.
 
+##### Scheduler
+The Scheduler represents an object that schedules units of work.  Theses units of work are called Processes.  You are able to create and register your own processes to perform work at certain intervals.  By default SwiftQ comes with 2 processes Heartbeat and Monitor.  This are uses to signal that the consumer is still alive and to monitor the processing queue for dead tasks.
+
 #### Supported Types
 SwiftQ encodes tasks to JSON before sending them to the broker. Therefore only types with native JSON representation can be supported.  Supported types are:
 
