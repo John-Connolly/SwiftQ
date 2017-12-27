@@ -36,14 +36,12 @@ extension Task {
         return storage.uuid
     }
     
+}
+
+extension Task {
+    
     init(data: Data) throws {
         self = try JSONDecoder().decode(Self.self, from: data)
-    }
-    
-    func log(with error: Error, consumer: String) throws -> Data {
-        let log = Log(message: error.localizedDescription, consumer: consumer, date: Date().unixTime)
-        storage.set(log: log)
-        return try data()
     }
     
     func data() throws -> Data {
@@ -51,12 +49,26 @@ extension Task {
         return try encoder.encode(self)
     }
     
+}
+
+extension Task {
+    
     func shouldRetry(_ retries: Int) -> Bool {
         return retries > storage.retryCount
     }
     
     func retry() {
         storage.incRetry()
+    }
+    
+}
+
+extension Task {
+    
+    func log(with error: Error, consumer: String) throws -> Data {
+        let log = Log(message: error.localizedDescription, consumer: consumer, date: Date().unixTime)
+        storage.set(log: log)
+        return try data()
     }
     
 }

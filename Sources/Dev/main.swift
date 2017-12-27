@@ -7,13 +7,14 @@ import Async
 
 let emailTask = EmailTask(email: "johndoe@example.com")
 
+//let queue = DispatchEventLoop(label: "eventloop.14.consumer")
+//let producer = try Producer(with: .development, on: queue)
+//
+//queue.async {
+//       try! producer.enqueue(emailTask)
+//        
+//}
 
-let queue = DispatchEventLoop(label: "eventloop.14.consumer")
-let producer = try Producer(on: queue)
-queue.async {
-    _ = try! producer.enqueue(emailTask)
-    _ = try! producer.enqueue(emailTask)
-}
 
 
 ///
@@ -43,8 +44,6 @@ queue.async {
 //    }
 //
 //}
-
-
 
 
 
