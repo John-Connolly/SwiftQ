@@ -149,6 +149,15 @@ Note: Consumers can only consume from one queue.
 ##### Scheduler
 The Scheduler represents an object that schedules units of work.  Theses units of work are called Processes.  You are able to create and register your own processes to perform work at certain intervals.  By default SwiftQ comes with 2 processes Heartbeat and Monitor.  This are uses to signal that the consumer is still alive and to monitor the processing queue for dead tasks.
 
+### Architecture
+Under the hood SwiftQ is a classic producer-consumer problem whereby a Redis queue is effectively an unbounded producer.  In order to limit memory usage and increase performance almost everything is a reactive-stream.  Reactive streams provide non-blocking back pressure which is the key to SwiftQ’s low memory usage and high performance.
+
+SwiftQ was designed in a way to effectively eliminate the need for locking resources.  It achieves this by having no shared state between threads.  Before version 1.0, SwiftQ had a thread safe connection pool.  This created a lot of contention when multiple threads were demanding a connection.
+
+#### Eventloops
+SwiftQ leverages Vapors Redis client.  The Redis Client uses asynchronous IO this helps SwiftQ utilize your CPU to its full capacity.  There are three main types of eventLoops Epoll, Kqueue and Dispatch.   A dispatch event loop is just a dispatch queue. The Epoll and Kqueue event loops are more optimized for asynchronous IO.
+
+
 #### Supported Types
 SwiftQ encodes tasks to JSON before sending them to the broker. Therefore only types with native JSON representation can be supported.  Supported types are:
 
@@ -171,19 +180,10 @@ SwiftQ encodes tasks to JSON before sending them to the broker. Therefore only t
 }
 
 ```
-### Architecture
-Under the hood SwiftQ is a classic producer-consumer problem whereby a Redis queue is effectively an unbounded producer.  In order to limit memory usage and increase performance almost everything is a reactive-stream.  Reactive streams provide non-blocking back pressure which is the key to SwiftQ’s low memory usage and high performance.
-
-SwiftQ was designed in a way to effectively eliminate the need for locking resources.  It achieves this by having no shared state between threads.  Before version 1.0, SwiftQ had a thread safe connection pool.  This created a lot of contention when multiple threads were demanding a connection.
-
-#### Eventloops
-SwiftQ leverages Vapors Redis client.  The Redis Client uses asynchronous IO this helps SwiftQ utilize your CPU to its full capacity.  There are three main types of eventLoops Epoll, Kqueue and Dispatch.   A dispatch event loop is just a dispatch queue. The Epoll and Kqueue event loops are more optimized for asynchronous IO.
-
-
 
 #### Installing
 Update your Package.swift file with
 
 ```swift
-.Package(url: "https://github.com/John-Connolly/SwiftQ.git", majorVersion: 0)
+ .package(url: "https://github.com/John-Connolly/SwiftQ.git", .exact("1.0.0"))
 ```
