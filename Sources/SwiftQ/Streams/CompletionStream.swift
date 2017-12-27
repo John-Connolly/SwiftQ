@@ -10,33 +10,34 @@ import Async
 import Redis
 
 final class CompletionStream: Async.InputStream {
- 
-    typealias Input = Task
+    
+    typealias Input = TaskResult
     
     private var upstream: ConnectionContext?
     
     init() { }
     
-    func input(_ event: InputEvent<Task>) {
+    func input(_ event: InputEvent<TaskResult>) {
         switch event {
         case .close: break
         case .connect(let upstream):
             self.upstream = upstream
             upstream.request()
         case .error(let error):
-            print("Uncaught Error: \(error)")
-        case .next(_):
+            Logger.log("Uncaught Error: \(error)", level: .warning)
+        case .next(let result):
+            result.onSuccess(onSuccess)
+            result.onError(onError)
             upstream?.request()
         }
     }
     
-    func onSuccess() {
+    func onSuccess(task: Task) {
         
     }
     
-    func onError() {
+    func onError(task: Task, with error: Error) {
         
     }
-    
     
 }

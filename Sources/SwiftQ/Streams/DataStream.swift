@@ -55,20 +55,20 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     private func accept() {
         eventLoop.async {
             
-            let task = self.client
+            let futureResp = self.client
                 .execute(command: .brpoplpush(q1: "myList", q2: "newList", timeout: 0))
                 .flatMap(to: RedisResponse.self) { response  in
                     return try response.string
                         .flatMap { resp in
                             self.client.execute(command: .get(key: resp))
                         }
-                        .or(throw: SwiftQError.unimplemented)
+                        .or(throw: SwiftQError.noValue)
             }
             
-            task.do { response in
+            futureResp.do { response in
                 
                 guard let data = response.data else {
-                    self.downstream?.error(SwiftQError.unimplemented)
+                    self.downstream?.error(SwiftQError.noValue)
                     return
                 }
                 

@@ -12,7 +12,7 @@ final class WorkStream: Async.Stream, Async.ConnectionContext  {
     
     typealias Input = Task
     
-    typealias Output = Task
+    typealias Output = TaskResult
     
     var upstream: ConnectionContext?
     
@@ -35,11 +35,12 @@ final class WorkStream: Async.Stream, Async.ConnectionContext  {
         case .next(let next):
             
             next.execute().do { _ in
-                self.downstream?.next(next)
+                self.downstream?.next(.success(next))
                 self.upstream?.request()
                 }.catch { error in
-                   self.downstream?.error(error) // Pass this error along. Next stream must handle this.
-                }
+                    // Pass this error along. Next stream must handle this.
+                    self.downstream?.next(.failure(task: next, with: error))
+            }
         }
         
     }
