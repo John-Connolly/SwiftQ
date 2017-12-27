@@ -159,7 +159,7 @@ Often times distributed systems need to communicate asynchronously with one anot
 4. (optional) Redis replication.
 
 #### Idempotency
-Because SwiftQ has at-least-once semantics it is possible for a Task to be ran more than once.  Tasks should be Idempotent, this means that if a task is ran more than once it should not change the result beyond the initial application.  This is particularly important for database writes.  All writes should be inside a transaction so they can be rolled back if an error occurs.
+Because SwiftQ has at-least-once semantics it is possible for a task to be ran more than once.  Tasks should be idempotent, this means that if a task is ran more than once it should not change the result beyond the initial application.  This is particularly important for database writes.  All writes should be inside a transaction so they can be rolled back if an error occurs.
 
 
 ### Architecture
