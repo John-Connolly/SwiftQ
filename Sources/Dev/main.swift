@@ -5,16 +5,27 @@ import Redis
 import Async
 
 
-let emailTask = EmailTask(email: "johndoe@example.com")
+let config = Configuration(pollingInterval: 100,
+                           enableScheduling: true,
+                           concurrency: 2,
+                           redisConfig: .development,
+                           tasks: [EmailTask.self])
+
+let app = try App(with: config)
+try app.run()
+
 
 //let queue = DispatchEventLoop(label: "eventloop.14.consumer")
-//let producer = try Producer(with: .development, on: queue)
-//
-//queue.async {
-//       try! producer.enqueue(emailTask)
-//        
-//}
 
+
+//queue.async {
+//      (1...200).forEach { _ in
+//       let emailTask = EmailTask(email: "johndoe@example.com")
+//       let producer = try! Producer(with: .development, on: queue)
+//       try! producer.enqueue(emailTask)
+//    }
+//}
+//RunLoop.main.run()
 
 
 ///
@@ -157,7 +168,7 @@ let emailTask = EmailTask(email: "johndoe@example.com")
 //}
 
 
-RunLoop.main.run()
+//RunLoop.main.run()
 
 
 

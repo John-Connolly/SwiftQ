@@ -36,7 +36,7 @@ public struct Configuration {
          redisConfig: RedisConfiguration,
          tasks: [Task.Type],
          queue: String = "default",
-         consumerName: String?,
+         consumerName: String? = nil,
          middleware: [Middleware] = []) {
         
         self.pollingInterval = pollingInterval

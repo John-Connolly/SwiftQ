@@ -36,12 +36,15 @@ final class WorkStream: Async.Stream, Async.ConnectionContext  {
             
             next.execute().do { _ in
                 self.downstream?.next(next)
+                self.upstream?.request()
                 }.catch { error in
                    self.downstream?.error(error) // Pass this error along. Next stream must handle this.
                 }
+            
+            
         }
     }
-    
+    /// TODO: Figure out how requesting upstream should work.
     func connection(_ event: ConnectionEvent) {
         switch event {
         case .cancel:
@@ -54,7 +57,6 @@ final class WorkStream: Async.Stream, Async.ConnectionContext  {
             upstream?.request()
             return
         }
-        
         
     }
     

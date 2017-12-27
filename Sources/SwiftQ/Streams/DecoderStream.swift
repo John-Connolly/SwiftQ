@@ -18,9 +18,6 @@ final class DecoderStream: Async.Stream, Async.ConnectionContext {
     
     var downstream: AnyInputStream<Output>?
     
-    /// Remaining downstream demand
-    var downstreamDemand: UInt = 0
-    
     private let resources: [InitResource]
     
     init(_ types: [Task.Type]) {
@@ -40,6 +37,7 @@ final class DecoderStream: Async.Stream, Async.ConnectionContext {
             do {
                 let task = try transform(next)
                 downstream?.next(task)
+                
             } catch {
                 self.downstream?.error(error)
             }
@@ -47,24 +45,15 @@ final class DecoderStream: Async.Stream, Async.ConnectionContext {
         }
     }
     
+    /// TODO: Figure out how requesting upstream should work.
     func connection(_ event: ConnectionEvent) {
         switch event {
         case .cancel:
-            self.downstreamDemand = 0
+            break
         case .request(let demand):
-            self.downstreamDemand += demand
+            upstream?.request(count: demand)
         }
         
-        guard downstreamDemand > 0 else {
-            upstream?.request()
-            return
-        }
-        // Not sure what to do here.
-        //        do {
-        //            try transform()
-        //        } catch {
-        //            self.downstream?.error(error)
-        //        }
     }
     
     

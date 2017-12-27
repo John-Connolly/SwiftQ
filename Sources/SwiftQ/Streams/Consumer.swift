@@ -1,10 +1,10 @@
-////
-////  Consumer.swift
-////  SwiftQ
-////
-////  Created by John Connolly on 2017-12-02.
-////
 //
+//  Consumer.swift
+//  SwiftQ
+//
+//  Created by John Connolly on 2017-12-02.
+//
+
 import Foundation
 import Async
 
@@ -27,6 +27,10 @@ final class Consumer {
         .stream(to: decoder)
         .stream(to: workStream)
         .output(to: completionStream)
+    }
+    
+    func run() {
+        dataStream.request()
     }
     
 }

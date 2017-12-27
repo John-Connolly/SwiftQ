@@ -8,13 +8,15 @@
 import Foundation
 import Async
 
-final class App {
+public final class App {
     
     
     private let config: Configuration
-    private let eventLoops: [EventLoop]
+//    private let eventLoops: [EventLoop]
+    private let consumers: [Consumer]
     
-    public init(_ configuration: Configuration) throws {
+    // FIXME: Specify event loop type. KQUEUE, EPOLL, DISPATCH
+    public init(with configuration: Configuration) throws {
         
         guard configuration.tasks.count > 0 else {
             throw SwiftQError.tasksNotRegistered
@@ -33,20 +35,19 @@ final class App {
         }
         
         self.config = configuration
-        // FIXME: Specify event loop type.
-        self.eventLoops = (1...configuration.concurrency).map { num -> DispatchEventLoop in
+        
+        self.consumers = try (1...configuration.concurrency).map { num in
             let eventLoop =  DispatchEventLoop(label: "swiftQ.eventloop.\(num)")
-            return eventLoop
+            return try Consumer(configuration, on: eventLoop)
         }
         
     }
     
-    public func run() throws {
-        _ = try eventLoops.map { eventLoop in
-            return try Consumer(config, on: eventLoop)
-        }
+    public func run() throws -> Never {
+        consumers.forEach { $0.run() }
         
         RunLoop.main.run()
+        exit(0)
     }
     
 }
