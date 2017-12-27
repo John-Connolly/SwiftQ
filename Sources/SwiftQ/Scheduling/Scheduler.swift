@@ -39,17 +39,6 @@ final class Scheduler {
             
             return source
         }
-        
-    }
-    
-}
-
-struct MonitorService: Process {
-    
-    let repeating = DispatchTimeInterval.seconds(1)
-    
-    func event(container: Container) {
-        print("working")
     }
     
 }
