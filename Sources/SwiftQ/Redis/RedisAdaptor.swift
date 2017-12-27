@@ -12,6 +12,8 @@ import Redis
 
 // TODO: Authorization
 // TODO: Pipelinening
+// TODO: Figure out if multiple clients are needed if they are not running
+// blocking commands
 final class RedisAdaptor {
     
     private let client: Future<RedisClient>

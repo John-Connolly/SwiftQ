@@ -38,7 +38,7 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     }
     
     func request(_ count: UInt) {
-        accept()
+        eventLoop.async(accept)
     }
     
     // Nothing really to clean up.
@@ -51,34 +51,31 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
         inputStream.connect(to: self)
     }
     
-    // TODO: Have real errors.
     private func accept() {
-        eventLoop.async {
+        let futureResp = self.client
+            .execute(command: .brpoplpush(q1: "myList", q2: "newList", timeout: 0))
+            .flatMap(to: RedisResponse.self) { response  in
+                return try response
+                    .string
+                    .flatMap { resp in
+                        self.client.execute(command: .get(key: resp))
+                    }
+                    .or(throw: SwiftQError.noValue)
+        }
+        
+        futureResp.do { response in
             
-            let futureResp = self.client
-                .execute(command: .brpoplpush(q1: "myList", q2: "newList", timeout: 0))
-                .flatMap(to: RedisResponse.self) { response  in
-                    return try response.string
-                        .flatMap { resp in
-                            self.client.execute(command: .get(key: resp))
-                        }
-                        .or(throw: SwiftQError.noValue)
+            guard let data = response.data else {
+                self.downstream?.error(SwiftQError.noValue)
+                return
             }
             
-            futureResp.do { response in
-                
-                guard let data = response.data else {
-                    self.downstream?.error(SwiftQError.noValue)
-                    return
-                }
-                
-                self.downstream?.next(data)
-                
-                }.catch { error in
-                    self.downstream?.error(error)
-            }
+            self.downstream?.next(data)
             
+            }.catch { error in
+                self.downstream?.error(error)
         }
     }
+    
     
 }
