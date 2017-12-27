@@ -9,40 +9,24 @@
 import Foundation
 import Redis
 
-//struct RedisResponse: RedisResponseRepresentable {
-//    
-//    let response: Redis.Data?
-//    
-//    var data: Foundation.Data? {
-//        return response?.bytes.map(Foundation.Data.init(bytes:))
-//    }
-//    
-//    var string: String? {
-//        return response?.string
-//    }
-//    
-//    var int: Int? {
-//        return response?.int
-//    }
-//    
-//    var array: [Foundation.Data]? {
-//        return response?.array?.flatMap { data -> Foundation.Data? in
-//            return data?.bytes.map(Foundation.Data.init(bytes:))
-//        }
-//    }
-//    
-//}
-//
-//
-//protocol RedisResponseRepresentable {
-//    
-//    var data: Foundation.Data? { get }
-//    
-//    var int: Int? { get }
-//    
-//    var string: String? { get }
-//    
-//    var array: [Foundation.Data]? { get }
-//    
-//}
-
+struct RedisResponse: RedisResponseRepresentable {
+    
+    let response: RedisData
+    
+    var data: Foundation.Data? {
+        return response.data
+    }
+    
+    var string: String? {
+        return response.string
+    }
+    
+    var int: Int? {
+        return response.int
+    }
+    
+    var array: [Foundation.Data]? {
+        return response.array?.flatMap { $0.data }
+    }
+    
+}

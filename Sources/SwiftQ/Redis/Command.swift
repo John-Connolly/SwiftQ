@@ -9,6 +9,7 @@
 import Foundation
 import Redis
 
+//TODO: MSET
 enum Command {
 
     // transactions
@@ -52,7 +53,6 @@ enum Command {
         case .get: return "GET"
         case .set: return "SET"
         case .del: return "DEL"
-//        case .mset: return "MSET" FIXME
         case .incr: return "INCR"
         case .zadd: return "ZADD"
         case .sadd: return "SADD"
