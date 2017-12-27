@@ -30,9 +30,3 @@ final class Consumer {
     }
     
 }
-
-//let eventLoops = (1...4).map { num -> DispatchEventLoop in
-//    let eventLoop =  DispatchEventLoop(label: "swiftQ.eventloop.\(num)")
-//    return eventLoop
-//}
-

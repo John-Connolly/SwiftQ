@@ -14,7 +14,8 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     public typealias Output = Data
     
     private let eventLoop: EventLoop
-    private let client: RedisClient
+    // TODO: Might have to have pool of blocked clients.
+    private let client: RedisAdaptor
     
     private var downstream: AnyInputStream<Output>?
     
@@ -23,27 +24,9 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     
     public init(with configuration: Configuration, on eventLoop: EventLoop) throws {
         self.eventLoop = eventLoop
-        self.client = try RedisClient.connect(on: eventLoop)
+        self.client = try RedisAdaptor(with: configuration.redisConfig, connections: 1, on: eventLoop)
     }
     
-    private func accept() {
-        eventLoop.async {
-            
-            self.client.run(command: "BRPOPLPUSH", arguments: ["myList","newList","0"]).do { data in
-                
-                guard let data = data.data else {
-                    self.downstream?.error(SwiftQError.unimplemented)
-                    return
-                }
-                
-                self.downstream?.next(data)
-                
-                }.catch { error in
-                    self.downstream?.error(error)
-            }
-            
-        }
-    }
     
     public func connection(_ event: ConnectionEvent) {
         switch event {
@@ -61,7 +44,6 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     // Nothing really to clean up.
     func cancel() {
         print("Data Stream Connection Canceled.")
-        
     }
     
     public func output<S>(to inputStream: S) where S: Async.InputStream, S.Input == Output {
@@ -69,5 +51,34 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
         inputStream.connect(to: self)
     }
     
+    // TODO: Have real errors.
+    private func accept() {
+        eventLoop.async {
+            
+            let task = self.client
+                .execute(command: .brpoplpush(q1: "myList", q2: "newList", timeout: 0))
+                .flatMap(to: RedisResponse.self) { response  in
+                    return try response.string
+                        .flatMap { resp in
+                            self.client.execute(command: .get(key: resp))
+                        }
+                        .or(throw: SwiftQError.unimplemented)
+            }
+            
+            task.do { response in
+                
+                guard let data = response.data else {
+                    self.downstream?.error(SwiftQError.unimplemented)
+                    return
+                }
+                
+                self.downstream?.next(data)
+                
+                }.catch { error in
+                    self.downstream?.error(error)
+            }
+            
+        }
+    }
     
 }
