@@ -29,7 +29,7 @@ public final class App {
         }
         
         if configuration.redisConfig.password == nil {
-            Logger.warning("Insecure redis configuration, always set a password")
+            Logger.log("Insecure redis configuration, always set a password", level: .info)
         }
         
         self.config = configuration
