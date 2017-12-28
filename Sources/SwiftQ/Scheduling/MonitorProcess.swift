@@ -12,6 +12,7 @@ struct MonitorProcess: Process {
     let repeating = DispatchTimeInterval.seconds(1)
     
     //TODO: Pass in name
+    //TODO: Transfer to work queue
     func event(container: Container) {
         guard let client = container.get(RedisContainer.self)?.client else {
             return

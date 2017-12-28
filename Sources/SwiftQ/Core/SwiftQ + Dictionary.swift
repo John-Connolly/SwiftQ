@@ -27,6 +27,7 @@ extension Dictionary where Key: ExpressibleByStringLiteral {
         }
     }
     
+    /// Returns the name of the task from the json structure
     func taskName() throws -> String {
         let storage = self[.storage] as? [String: Any]
         return try storage
