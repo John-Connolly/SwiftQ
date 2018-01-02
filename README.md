@@ -173,7 +173,7 @@ SwiftQ leverages Vapors Redis client.  The Redis Client uses asynchronous IO thi
 ### The Big Picture
 
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/8390081/34500777-8dd544a6-efe2-11e7-80ca-8fcf4a184932.png"  alt="Diagram">
+    <img src="https://user-images.githubusercontent.com/8390081/34500777-8dd544a6-efe2-11e7-80ca-8fcf4a184932.png"  alt="Diagram" width="500">
     <br>
     <br>
 </p>
