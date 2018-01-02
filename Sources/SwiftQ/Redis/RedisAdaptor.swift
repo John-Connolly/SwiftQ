@@ -18,7 +18,7 @@ final class RedisAdaptor {
     
     private let client: Future<RedisClient>
     
-    init(with config: RedisConfiguration, connections: Int, on eventLoop: EventLoop) throws {
+    init(with config: RedisConfiguration, on eventLoop: EventLoop) throws {
         let client = try RedisClient.connect(hostname: config.hostname, port: config.port, on: eventLoop)
         let command = Command.select(db: config.redisDB ?? 0)
         

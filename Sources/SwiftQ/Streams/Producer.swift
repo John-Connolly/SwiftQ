@@ -14,7 +14,7 @@ public final class Producer {
     private let client: RedisAdaptor
     
     public init(with configuration: RedisConfiguration,on eventLoop: EventLoop) throws {
-        self.client = try RedisAdaptor(with: configuration, connections: 1, on: eventLoop)
+        self.client = try RedisAdaptor(with: configuration, on: eventLoop)
     }
     
     public func enqueue(_ task: Task) throws -> Future<Void>  {

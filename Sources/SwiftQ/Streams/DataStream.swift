@@ -28,9 +28,9 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     
     public init(with configuration: Configuration, on eventLoop: EventLoop) throws {
         self.eventLoop = eventLoop
-        self.client = try RedisAdaptor(with: configuration.redisConfig, connections: 1, on: eventLoop)
+        self.client = try RedisAdaptor(with: configuration.redisConfig, on: eventLoop)
         pool = Pool(max: 10) {
-            return try RedisAdaptor(with: configuration.redisConfig, connections: 1, on: eventLoop)
+            return try RedisAdaptor(with: configuration.redisConfig, on: eventLoop)
         }
         
     }

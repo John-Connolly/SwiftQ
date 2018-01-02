@@ -14,7 +14,7 @@ final class RedisContainer: ContainerItem {
     
     init() throws {
         let eventLoop = DispatchEventLoop(label: "swiftQ.eventloop.\(RedisContainer.name)")
-        self.client = try RedisAdaptor(with: .development, connections: 1, on: eventLoop)
+        self.client = try RedisAdaptor(with: .development, on: eventLoop)
     }
     
 }
