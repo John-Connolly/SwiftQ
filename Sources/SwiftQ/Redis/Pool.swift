@@ -8,7 +8,7 @@
 import Foundation
 import Async
 
-/// A pool used for Redis blocking commands. This is a non thread safe pool
+/// A pool used for Redis blocking commands. This is a thread unsafe
 /// implementation
 final class Pool<T> {
     
@@ -24,10 +24,10 @@ final class Pool<T> {
     /// Notified when more connections are available.
     private var waiters: [(T) -> ()]
     
-    private let connectionFactory: () -> Future<T>
+    private let connectionFactory: () throws -> T
     
     
-    init(max: UInt, factory: @escaping () -> Future<T>) throws {
+    init(max: UInt, factory: @escaping () throws -> T) {
         self.max = max
         self.active = .min
         self.available = []
@@ -42,12 +42,14 @@ final class Pool<T> {
             promise.complete(ready)
             
         } else if self.active < self.max {
-            connectionFactory().do { connection in
+            do {
+                let connection = try connectionFactory()
                 
                 self.active += 1
                 promise.complete(connection)
-                
-                }.catch(promise.fail)
+            } catch {
+                promise.fail(error)
+            }
             
         } else {
             self.waiters.append(promise.complete)
