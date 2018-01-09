@@ -5,23 +5,41 @@ import Redis
 import Async
 
 
+final class Email: Task {
+    
+    let storage: Storage
+    
+    init() {
+        self.storage = Storage(Email.self)
+    }
+    
+    func execute() -> Signal {
+        return .done
+    }
+    
+    var recoveryStrategy: RecoveryStrategy {
+        return .log
+    }
+}
+
 let config = Configuration(pollingInterval: 100,
                            enableScheduling: true,
-                           concurrency: 2,
+                           concurrency: 8,
                            redisConfig: .development,
-                           tasks: [EmailTask.self])
+                           tasks: [Email.self])
 
 let app = try App(with: config)
 try app.run()
 
-
+//
 //let queue = DispatchEventLoop(label: "eventloop.14.consumer")
 //
+//let producer = try! Producer(with: .development, on: queue)
 //
 //queue.async {
-//      (1...2000).forEach { _ in
+//      (1...2).forEach { _ in
 //
-//       let producer = try! Producer(with: .development, on: queue)
+//   
 //       let emailTask = EmailTask(email: "johndoe@example.com")
 //
 //       _ = try! producer.enqueue(emailTask)

@@ -64,7 +64,7 @@ public final class DataStream: Async.OutputStream, Async.ConnectionContext {
     private func accept() {
         
         let futureResp = self.client
-            .execute(command: .brpoplpush(q1: "myList", q2: "newList", timeout: 0))
+            .execute(command: .brpoplpush(q1: "default:wq", q2: "newList", timeout: 0))
             .flatMap(to: RedisResponse.self) { response  in
                 return try response
                     .string

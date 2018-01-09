@@ -14,11 +14,14 @@ struct HeartBeatProcess: Process {
     // TODO: Get consumer name.
     /// Sets a key in redis with the current time to indicate the consumer in alive.
     func event(container: Container) {
-        let client = container.get(RedisContainer.self)?.client
+        guard let client = container.get(RedisContainer.self)?.client else {
+            Logger.log("Could not retrieve container", level: .warning)
+            return
+        }
         
         Date().unixTime.description.data(using: .utf8)
             .flatMap { time in
-                client?.execute(command: .set(key: "consumerName", value: time))
+                client.execute(command: .set(key: "consumerName", value: time))
             }?.catch { error in
                 Logger.log(error)
         }

@@ -27,6 +27,9 @@ final class Queue: Async.Stream {
         
     }
     
+    func enqueue(contentsOf tasks: [Task]) {
+        
+    }
     
     
 }

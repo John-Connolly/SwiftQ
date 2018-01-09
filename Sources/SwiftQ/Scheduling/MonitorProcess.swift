@@ -15,6 +15,7 @@ struct MonitorProcess: Process {
     //TODO: Transfer to work queue
     func event(container: Container) {
         guard let client = container.get(RedisContainer.self)?.client else {
+            Logger.log("Could not retrieve container", level: .warning)
             return
         }
         
