@@ -135,7 +135,7 @@ final class PollTask: PeriodicTask {
 This task will run at 5:30 am every day. 
 Periodic tasks must conform to the PeriodicTask protocol.
 
-####  Advanced Usage
+## Advanced
 By default all consumers consume tasks from the same queue.  You may want to specify a custom queue which only certain tasks are routed to.  To do this just add this to your task
 
 ```swift
@@ -147,10 +147,10 @@ You will also need to specify the custom queue in the consumer configuration.
 
 Note: Consumers can only consume from one queue.
 
-##### Scheduler
+#### Scheduler
 The Scheduler represents an object that schedules units of work.  Theses units of work are called Processes.  You are able to create and register your own processes to perform work at certain intervals.  By default SwiftQ comes with 2 processes Heartbeat and Monitor.  This are uses to signal that the consumer is still alive and to monitor the processing queue for dead tasks.
 
-##### At-least-once delivery
+#### At-least-once delivery
 Often times distributed systems need to communicate asynchronously with one another.  In order to achieve this,  distributed systems use messages.  There are 3 types of types of delivery semantics for messages: at-most-once, at-least-once, and exactly-once.  The ideal solution solution is to have exactly-once delivery, this would prevent the possibility of tasks being ran more then once.  Although some message brokers such as Kafka claim to provide these semantics, it is often disputed that exactly-once delivery is not possible.  SwiftQ aims to provide at-least-once delivery.  In order to achieve this a couple things need to be in place. 
 
 1. Multiple consumers have to be consuming from a queue.
@@ -158,7 +158,7 @@ Often times distributed systems need to communicate asynchronously with one anot
 3. Redis needs to have persistence enabled.
 4. (optional) Redis replication.
 
-#### Idempotency
+### Idempotency
 Because SwiftQ has at-least-once semantics it is possible for a task to be ran more than once.  Tasks should be idempotent, this means that if a task is ran more than once it should not change the result beyond the initial application.  This is particularly important for database writes.  All writes should be inside a transaction so they can be rolled back if an error occurs.
 
 
@@ -169,6 +169,31 @@ SwiftQ was designed in a way to effectively eliminate the need for locking resou
 
 #### Eventloops
 SwiftQ leverages Vapors Redis client.  The Redis Client uses asynchronous IO this helps SwiftQ utilize your CPU to its full capacity.  There are three main types of eventLoops Epoll, Kqueue and Dispatch.   A dispatch event loop is just a dispatch queue. The Epoll and Kqueue event loops are more optimized for asynchronous IO.
+
+#### Process Concurrency
+Feature to enable the single worker to simultaneously handle multiple active jobs.
+
+#### Notes about backpressure
+SwiftQ is optomized for operations that use asynchronous IO, because of this backpressure is ensential for controlling system resources.  Configuring the backpressure controls how many concurrent tasks are being executed on one OS Thread.  If the operations performed in a task are blocking by nature such as resizing an image or processing large amounts of data then backpressure will not be needed.
+
+
+#### Configuring Concurrency
+Choosing a currency setting depends on the operations the tasks perform and number of logical CPUs the system has.  If the Tasks performed are CPU bound or use non-blocking IO than setting concurrency equal to the number of CPUs will be the most performant choice.  This will create one event-loop per core.  Choosing a higher concurrency will most likely have a negative effect of performance.  The only exception to this is if blocking IO is being used in the Tasks.  If this is the case then trial and error will be the best solution to finding the most performant solution. A concurrency higher than 64 will most likely cause thread explosion. 
+
+
+
+### Why Redis?
+
+There are many esoteric message brokers out there, that may provide better semantics however they tend to be much harder to use than redis.   If you are at the stage where you are thinking about SwiftQ then chances are Redis is already deployed in your technology stack.  
+
+#### Blocked - Redis Clients
+Depending on the latency of the Redis connection it may be advantageous to have more than one blocked connection per thread.
+
+##### Calculating Redis Connections
+Scheduling -> 1
+Blocked -> 1
+Other -> 1
+
 
 ### The Big Picture
 
