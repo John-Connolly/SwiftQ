@@ -135,6 +135,10 @@ final class PollTask: PeriodicTask {
 This task will run at 5:30 am every day. 
 Periodic tasks must conform to the PeriodicTask protocol.
 
+### Security
+Redis is not designed to be exposed to the internet.  It should only be used in trusted environments.  Always make sure precautions are taken to secure Redis. 
+
+
 ## Advanced
 By default all consumers consume tasks from the same queue.  You may want to specify a custom queue which only certain tasks are routed to.  To do this just add this to your task
 
@@ -193,6 +197,12 @@ Depending on the latency of the Redis connection it may be advantageous to have 
 Scheduling -> 1
 Blocked -> 1
 Other -> 1
+
+|   Blocked  |  Scheduling |  Total |
+|-----|----|----|
+|     | 1  |    | 
+|     | 1  |    |
+|     | 1  |    |
 
 
 ### The Big Picture

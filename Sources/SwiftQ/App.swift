@@ -28,10 +28,6 @@ public final class App {
             throw SwiftQError.invalidQueueName(configuration.queue)
         }
         
-        if configuration.redisConfig.password == nil {
-            Logger.log("Insecure redis configuration, always set a password", level: .info)
-        }
-        
         self.config = configuration
         
         self.consumers = try (1...configuration.concurrency).map { num in
@@ -44,8 +40,16 @@ public final class App {
     public func run() throws -> Never {
         consumers.forEach { $0.run() }
         
+        if config.redisConfig.password == nil {
+            Logger.log("Insecure redis configuration, always set a password", level: .info)
+        }
+        
+        Logger.log("Running", level: .info)
         RunLoop.main.run()
         exit(0)
     }
     
 }
+
+
+
