@@ -29,8 +29,7 @@ struct Decoder {
     
     private func decode(task: Data, with name: String) throws -> Task {
         let taskType = resources
-            .filter { $0.name == name }
-            .first?
+            .first(where: { $0.name == name })?
             .type
         return try taskType
             .map { try $0.init(data: task) }

@@ -22,7 +22,7 @@ extension EnqueueingBox {
     
    
     init(_ task: Task) throws {
-        self.uuid = task.uuid
+        self.uuid = "" //task.uuid
         self.queue = task.queue
         self.task = try task.data()
     }

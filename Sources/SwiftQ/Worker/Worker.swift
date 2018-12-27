@@ -72,8 +72,8 @@ final class Worker {
             
             middlewares.before(task: task)
             
-            try task.execute()
-            
+//            try task.execute()
+
             middlewares.after(task: task)
             complete(task: task)
             

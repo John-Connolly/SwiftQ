@@ -151,8 +151,8 @@ final class ReliableQueue {
         try redisAdaptor.pipeline {
             return  [
                 .multi,
-                .lrem(key: processingQKey, count: 0, value: task.uuid),
-                .del(key: task.uuid),
+                .lrem(key: processingQKey, count: 0, value: ""),
+                .del(key: ""),
                 .incr(key: RedisKey.failure(consumerName).name),
                 .lpush(key: RedisKey.log.name, values: [log]),
                 .exec

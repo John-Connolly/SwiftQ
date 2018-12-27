@@ -1,5 +1,5 @@
 //
-//  SwiftQConsumer.swift
+//  Consumer.swift
 //  SwiftQ
 //
 //  Created by John Connolly on 2017-06-04.
@@ -9,7 +9,7 @@
 import Foundation
 import Dispatch
 
-public final class SwiftQConsumer {
+public final class Consumer {
     
     private let worker: Worker
     
@@ -28,7 +28,7 @@ public final class SwiftQConsumer {
             throw SwiftQError.invalidConcurrency(configuration.concurrency)
         }
         
-        guard configuration.queue.characters.count > 0 else {
+        guard configuration.queue.count > 0 else {
             throw SwiftQError.invalidQueueName(configuration.queue)
         }
         

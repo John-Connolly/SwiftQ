@@ -7,12 +7,13 @@
 //
 
 import Foundation
+import NIO
 
 public protocol Task: Codable {
     
-    var storage: Storage { get }
-    
-    func execute() throws 
+//    var storage: Storage { get }
+
+    func execute(loop: EventLoop) -> EventLoopFuture<()>
     
     var recoveryStrategy: RecoveryStrategy { get }
     
@@ -31,31 +32,36 @@ extension Task {
         return "default"
     }
     
-    var uuid: String {
-        return storage.uuid
-    }
-    
+//    var uuid: String {
+//        return storage.uuid
+//    }
+
     init(data: Data) throws {
         self = try JSONDecoder().decode(Self.self, from: data)
     }
     
     func log(with error: Error, consumer: String) throws -> Data {
-        let log = Log(message: error.localizedDescription, consumer: consumer, date: Date().unixTime)
-        storage.set(log: log)
+//        let log = Log(message: error.localizedDescription,
+//                      consumer: consumer,
+//                      date: Date().unixTime)
+//        storage.set(log: log)
         return try data()
     }
     
-    func data() throws -> Data {
+    public func data() throws -> Data {
         let encoder = JSONEncoder()
+        if #available(OSX 10.13, *) {
+            encoder.outputFormatting = .sortedKeys
+        }
         return try encoder.encode(self)
     }
     
     func shouldRetry(_ retries: Int) -> Bool {
-        return retries > storage.retryCount
+        return true// retries > storage.retryCount
     }
     
     func retry() {
-        storage.incRetry()
+//        storage.incRetry()
     }
     
 }

@@ -8,7 +8,7 @@
 
 import Foundation
 
-public final class Storage: Codable {
+public struct Storage: Codable {
     
     let uuid: String
     
@@ -38,15 +38,15 @@ public final class Storage: Codable {
         try container.encodeIfPresent(log, forKey: .log)
     }
     
-    func set(log: Log) {
+    mutating func set(log: Log) {
         self.log = log
     }
     
-    func set(type: TaskType) {
+    mutating func set(type: TaskType) {
         self.taskType = type
     }
     
-    func incRetry() {
+    mutating func incRetry() {
         retryCount += 1
     }
     

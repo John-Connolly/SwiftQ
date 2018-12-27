@@ -24,8 +24,7 @@ struct Host {
     private static func currentHostName() -> String {
         let hname = UnsafeMutablePointer<Int8>.allocate(capacity: Int(NI_MAXHOST))
         defer {
-            hname.deinitialize()
-            hname.deallocate(capacity: Int(NI_MAXHOST))
+            hname.deallocate()
         }
         let r = gethostname(hname, Int(NI_MAXHOST))
         if r < 0 || hname[0] == 0 {

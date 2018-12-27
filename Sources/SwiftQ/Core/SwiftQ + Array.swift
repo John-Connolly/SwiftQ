@@ -10,10 +10,6 @@ import Foundation
 
 extension Array {
     
-    subscript (safe index: Int) -> Element? {
-        return index < count ? self[index] : nil
-    }
-    
     func prepend(_ element: Element) -> [Element] {
         var array = self
         array.insert(element, at: 0)
