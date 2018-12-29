@@ -9,10 +9,6 @@ import Foundation
 import NIO
 import SwiftQ
 
-//let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-//let eventloop = group.next()
-//RunLoop.main.run()
-
 
 struct TaskInfo<T: Task>: Codable {
     let task: T
@@ -21,7 +17,7 @@ struct TaskInfo<T: Task>: Codable {
     var enqueuedAt: Int?
     var retryCount = 0
     var taskType: TaskType
-//    var log: Log?
+//  var log: Log?
 
      init(_ task: T) {
         self.name = String(describing: T.self)
@@ -32,11 +28,12 @@ struct TaskInfo<T: Task>: Codable {
 
 }
 
-struct Email: Task {
+ struct Email: Task {
 
     let email: String
 
     func execute(loop: EventLoop) -> EventLoopFuture<()> {
+        print("hello!")
         return loop.newSucceededFuture(result: ())
     }
 
@@ -44,11 +41,54 @@ struct Email: Task {
 
 
 let email = Email(email: "jconnolly")
-let info = TaskInfo(email)
-let data = try! JSONEncoder().encode(info)
-let json = try! JSONSerialization.jsonObject(with: data, options: .allowFragments)
+//let info = TaskInfo(email)
+//let data = try! JSONEncoder().encode(info)
+//let json = try! JSONSerialization.jsonObject(with: data, options: .allowFragments)
 
-print(String(data: try! JSONSerialization.data(withJSONObject: json, options: .prettyPrinted), encoding: .utf8)!)
+//print(String(data: try! JSONSerialization.data(withJSONObject: json, options: .prettyPrinted), encoding: .utf8)!)
+
+let group = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+let eventloop = group.next()
+let redis2 = AsyncRedis.connect(eventLoop: eventloop)
+let redis = AsyncRedis.connect(eventLoop: eventloop).and(redis2).map(AsyncReliableQueue.init)
+
+
+let t = redis.then { queue -> EventLoopFuture<[RedisData]> in
+    queue.bdqueue()
+    let f = (1...1).map { _ in //1_00_000
+        return email
+    }
+    return queue.enqueue(contentsOf: f)//queue.enqueue(task: email)
+    }.map { stuff in
+//        switch stuff[0] {
+//        case .error(let item): print(item)
+//        default:()
+//        }
+//        print(stuff)
+}
+
+
+//let eventloop2 = group.next()
+//let redis3 = AsyncRedis.connect(eventLoop: eventloop2)
+//let redis4 = AsyncRedis.connect(eventLoop: eventloop2).and(redis3).map(AsyncReliableQueue.init)
+//
+//
+//let f = redis4.then { queue -> EventLoopFuture<[RedisData]> in
+//    queue.bdqueue()
+//    let f = (1...1).map { _ in //1_00_000
+//        return email
+//    }
+//    return queue.enqueue(contentsOf: f)//queue.enqueue(task: email)
+//    }.map { stuff in
+//        //        switch stuff[0] {
+//        //        case .error(let item): print(item)
+//        //        default:()
+//        //        }
+//        //        print(stuff)
+//}
+//
+//print(t)
 
 
 
+RunLoop.main.run()
