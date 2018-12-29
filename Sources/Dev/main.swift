@@ -19,11 +19,11 @@ let config = Configuration(pollingInterval: 10,
                            tasks: [Email.self]
 )
 
-//let email = Email(email: "jconnolly2")
-//
-//let resp = Producer.connect(on: eventloop).map { producer in
-//    producer.enqueue(task: email)
-//}
+let email = Email(email: "jconnolly2")
+
+let resp = Producer.connect(on: eventloop).map { producer in
+    producer.enqueue(task: email)
+}
 
 //RunLoop.main.run()
 

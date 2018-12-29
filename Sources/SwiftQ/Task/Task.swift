@@ -29,41 +29,30 @@ extension Task {
         return "default"
     }
 
-    public func Info() {
-//        _ = TaskInfo<S
-    }
+
     
 //    var uuid: String {
 //        return storage.uuid
 //    }
 
     init(data: Data) throws {
-//        TaskInfo<Email.self>
         self = try JSONDecoder().decode(Self.self, from: data)
     }
 
     static func create(from data: Data) -> Task {
-        return try! JSONDecoder().decode(TaskInfo<Self>.self, from: data).task
+        return try! JSONDecoder().decode(TaskInfo<Self>.self, from: data).task // FIXME
     }
 
 
     
-    func log(with error: Error, consumer: String) throws -> Data {
+    func log(with error: Error, consumer: String) {
 //        let log = Log(message: error.localizedDescription,
 //                      consumer: consumer,
 //                      date: Date().unixTime)
 //        storage.set(log: log)
-        return try data()
     }
     
-    public func data() throws -> Data {
-        let encoder = JSONEncoder()
-        if #available(OSX 10.13, *) {
-            encoder.outputFormatting = .sortedKeys
-        }
-        return try encoder.encode(self)
-    }
-    
+
     func shouldRetry(_ retries: Int) -> Bool {
         return true// retries > storage.retryCount
     }

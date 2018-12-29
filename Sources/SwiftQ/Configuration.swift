@@ -27,8 +27,7 @@ public struct Configuration {
     /// Used for consumer specific processing queues.
     /// If not provided the servers hostname will be used.
     let consumerName: String?
-    
-    let middleware: [Middleware]
+
     
     public init(pollingInterval: Int,
          enableScheduling: Bool,
@@ -36,8 +35,7 @@ public struct Configuration {
          redisConfig: RedisConfig,
          tasks: [Task.Type],
          queue: String = "default",
-         consumerName: String? = nil,
-         middleware: [Middleware] = []) {
+         consumerName: String? = nil) {
         
         self.pollingInterval = pollingInterval
         self.enableScheduling = enableScheduling
@@ -46,7 +44,6 @@ public struct Configuration {
         self.tasks = tasks
         self.queue = queue
         self.consumerName = consumerName
-        self.middleware = middleware
     }
     
 }

@@ -34,8 +34,8 @@ public final class AsyncReliableQueue {
             .bulkString("LPUSH".data(using: .utf8)!),
             .bulkString("queue".data(using: .utf8)!),
         ]
-        let data = tasks.map { RedisData.bulkString(try! $0.data()) }
-        return redis.pipeLine(message: [.array(redisData + data)])
+//        let data = tasks.map { RedisData.bulkString(try! $0.data()) }
+        return redis.pipeLine(message: [.array(redisData )])//FIXME
     }
 
     public func bdqueue() {
