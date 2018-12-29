@@ -38,8 +38,8 @@ let config = Configuration(pollingInterval: 10,
 let email = Email(email: "jconnolly")
 
 
-let consumer = try Consumer(config)
-consumer.run()
+//let consumer = try Consumer(config)
+//consumer.run()
 
 
 let group = MultiThreadedEventLoopGroup(numberOfThreads: 2)

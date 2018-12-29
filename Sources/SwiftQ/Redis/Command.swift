@@ -19,8 +19,8 @@ enum Command {
     case select(db: Int)
     
     // list
-    case lrem(key: String, count: Int, value: String)
-    case lpush(key: String, values: [BytesRepresentable])
+    case lrem(key: String, count: Int, value: Foundation.Data)
+    case lpush(key: String, values: [Foundation.Data])
     case lrange(key: String, start: Int, stop: Int)
     case brpoplpush(q1: String, q2: String, timeout: Int)
     
@@ -40,7 +40,7 @@ enum Command {
     case sadd(key: String, value: String)
     
     
-    var rawValue: String {
+    var name: String {
         switch self {
         case .multi: return "MULTI"
         case .exec: return "EXEC"
@@ -60,41 +60,39 @@ enum Command {
         case .zrem: return "ZREM"
         }
     }
-    
-    var params: [BytesRepresentable] {
+
+    var params2: [RedisData] {
         switch self {
-        case .multi:
-            return []
-        case .exec:
-            return []
+        case .multi: return []
+        case .exec:  return []
         case .select(let db):
-            return [db.description]
+            return [name, db.description].redisData()
         case .lrem(let key, let count, let value):
-            return [key, count.description, value]
+            return [name, key, count.description].redisData() + [RedisData.bulkString(value)]
         case .lpush(let key, let values):
-            return values.prepend(key)
-        case .lrange(let key,let start, let stop):
-            return [key, start.description, stop.description]
+            return [name, key].redisData() + values.map(RedisData.bulkString)
+        case .lrange(let key, let start, let stop):
+            return []
         case .brpoplpush(let q1, let q2, let timeout):
-            return [q1, q2, timeout.description]
+            return [name, q1, q2, timeout.description].redisData()
         case .get(let key):
-            return [key]
-        case .set(let key, let value):
-            return [key, value]
+            return []
         case .del(let key):
-            return [key]
-        case .mset(let box):
-            return box.bytesRepresentable
+            return []
+        case .set(let key, let value):
+            return []
+        case .mset(_):
+            return []
         case .incr(let key):
-            return [key]
+            return []
         case .zadd(let queue, let score, let value):
-            return [queue, score, value]
-        case .zrangebyscore(let key,let min, let max):
-            return [key,min,max]
+            return []
+        case .zrangebyscore(let key, let min, let max):
+            return []
         case .zrem(let key, let values):
-            return values.prepend(key)
+            return []
         case .sadd(let key, let value):
-            return [key, value]
+            return []
         }
     }
     
@@ -115,4 +113,12 @@ struct EnqueueingBoxes {
         }
     }
     
+}
+
+
+extension Array where Element == String {
+
+    func redisData() -> [RedisData] {
+        return self.map { .bulkString(Data($0.utf8)) }
+    }
 }

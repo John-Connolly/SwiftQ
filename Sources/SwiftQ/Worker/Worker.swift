@@ -65,19 +65,19 @@ final class Worker {
     }
     
     private func execute(_ task: Task) {
-        do {
-            
-            middlewares.before(task: task)
-            
-//            try task.execute()
-
-            middlewares.after(task: task)
-            complete(task: task)
-            
-        } catch {
-            middlewares.after(task: task, with: error)
-            failure(task, error: error)
-        }
+//        do {
+//            
+//            middlewares.before(task: task)
+//            
+////            try task.execute()
+//
+//            middlewares.after(task: task)
+//            complete(task: task)
+//            
+//        } catch {
+//            middlewares.after(task: task, with: error)
+//            failure(task, error: error)
+//        }
     }
     
     /// Called when a task is successfully completed. If the task is

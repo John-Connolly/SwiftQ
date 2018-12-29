@@ -20,13 +20,7 @@ public final class AsyncReliableQueue {
 
     public func enqueue(task: Task) -> EventLoopFuture<RedisData> {
         let data = try! task.data() // FIX ME!!
-
-        let redisData: [RedisData] = [
-            .bulkString("LPUSH".data(using: .utf8)!),
-            .bulkString("queue".data(using: .utf8)!),
-            .bulkString(data),
-            ]
-        return redis.send(message: .array(redisData))
+        return send(.lpush(key: "queue", values: [data]))
     }
 
     public func enqueue(contentsOf tasks: [Task]) -> EventLoopFuture<[RedisData]> {
@@ -39,13 +33,7 @@ public final class AsyncReliableQueue {
     }
 
     public func bdqueue() {
-        let redisData: [RedisData] = [
-            .bulkString("BRPOPLPUSH".data(using: .utf8)!),
-            .bulkString("queue".data(using: .utf8)!),
-            .bulkString("queue2".data(using: .utf8)!),
-            .bulkString("0".data(using: .utf8)!),
-            ]
-        let resp = bredis.send(message: .array(redisData))
+        let resp = sendb(.brpoplpush(q1: "queue", q2: "queue2", timeout: 0))
         resp.whenSuccess { data in
             switch data {
             case .bulkString(let data):
@@ -57,19 +45,27 @@ public final class AsyncReliableQueue {
                 }
             default: ()
             }
-//            print(data)
+        }
+    }
 
+    private func sendb(_ command: Command) -> EventLoopFuture<RedisData> {
+        return bredis.send(message: .array(command.params2))
+    }
+
+    private func send(_ command: Command) -> EventLoopFuture<RedisData> {
+        return redis.send(message: .array(command.params2))
+    }
+
+    public func blockingDequeue(_ f: @escaping (RedisData) -> ()) {
+        let resp = sendb(.brpoplpush(q1: "queue", q2: "queue2", timeout: 0))
+        resp.whenSuccess { data in
+            f(data)
+            self.bdqueue()
         }
     }
 
     public func complete(task: Data) -> EventLoopFuture<RedisData> {
-        let redisData: [RedisData] = [
-            .bulkString("LREM".data(using: .utf8)!),
-            .bulkString("queue2".data(using: .utf8)!),
-            .bulkString("0".data(using: .utf8)!),
-            .bulkString(task),
-            ]
-        return redis.send(message: .array(redisData))
+        return send(.lrem(key: "queue2", count: 0, value: task))
     }
 
     struct Email: Task {
@@ -81,5 +77,13 @@ public final class AsyncReliableQueue {
         }
 
     }
+
+}
+
+public protocol AsyncQueue {
+
+    func enqueue(contentsOf tasks: [Task]) -> EventLoopFuture<[RedisData]>
+    func blockingDequeue(_ f: @escaping (RedisData) -> ())
+    func complete(task: Data) -> EventLoopFuture<RedisData>
 
 }

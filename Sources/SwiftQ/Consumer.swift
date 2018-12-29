@@ -8,6 +8,7 @@
 
 import Foundation
 import Dispatch
+import NIO
 
 public final class Consumer {
     
@@ -46,9 +47,10 @@ public final class Consumer {
     }
     
     public func run() -> Never {
-        if config.enableScheduling {
-//            monitor.run()
-        }
+
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventloop = group.next()
+        let decoder = Decoder(types: config.tasks)
         
 //        worker.run()
 

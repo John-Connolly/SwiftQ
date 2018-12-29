@@ -71,7 +71,7 @@ final class ReliableQueue {
         try redisAdaptor.pipeline {
             return [
                 .multi,
-                .lpush(key: RedisKey.workQ(item.queue).name, values: [item.uuid]),
+                .lpush(key: RedisKey.workQ(item.queue).name, values: []),
                 .set(key: item.uuid, value: item.task),
                 .exec
             ]
@@ -80,11 +80,11 @@ final class ReliableQueue {
     
     /// Pushes and array of task onto the work queue
     func enqueue(contentsOf items: [EnqueueingBox]) throws {
-        let ids = items.map { $0.uuid }
+//        let ids = items.map { $0.uuid }
         try redisAdaptor.pipeline {
             return [
                 .multi,
-                .lpush(key: RedisKey.workQ(queue).name, values: ids),
+                .lpush(key: RedisKey.workQ(queue).name, values: []),
                 .mset(EnqueueingBoxes(items)),
                 .exec
             ]
@@ -109,11 +109,7 @@ final class ReliableQueue {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             return [
-                .multi,
-                .lrem(key: processingQKey, count: 0, value: item.uuid),
-                .incr(key: incrKey),
-                .del(key: item.uuid),
-                .exec
+
             ]
         }
     }
@@ -123,9 +119,9 @@ final class ReliableQueue {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             return [
-                .lrem(key: processingQKey, count: 0, value: item.uuid),
-                .incr(key: incrKey),
-                .zadd(queue: RedisKey.scheduledQ.name, score: item.score, value: item.uuid)
+//                .lrem(key: processingQKey, count: 0, value: item.uuid),
+//                .incr(key: incrKey),
+//                .zadd(queue: RedisKey.scheduledQ.name, score: item.score, value: item.uuid)
             ]
         }
     }
@@ -135,12 +131,12 @@ final class ReliableQueue {
         let incrKey = success ? RedisKey.success(consumerName).name : RedisKey.failure(consumerName).name
         try redisAdaptor.pipeline {
             return [
-                .multi,
-                .lrem(key: processingQKey, count: 0, value: item.uuid),
-                .incr(key: incrKey),
-                .set(key: item.uuid, value: item.task),
-                .lpush(key: RedisKey.workQ(queue).name, values: [item.uuid]),
-                .exec
+//                .multi,
+//                .lrem(key: processingQKey, count: 0, value: item.uuid),
+//                .incr(key: incrKey),
+//                .set(key: item.uuid, value: item.task),
+//                .lpush(key: RedisKey.workQ(queue).name, values: []),
+//                .exec
             ]
         }
     }
@@ -150,12 +146,12 @@ final class ReliableQueue {
         let log = try task.log(with: error, consumer: consumerName)
         try redisAdaptor.pipeline {
             return  [
-                .multi,
-                .lrem(key: processingQKey, count: 0, value: ""),
-                .del(key: ""),
-                .incr(key: RedisKey.failure(consumerName).name),
-                .lpush(key: RedisKey.log.name, values: [log]),
-                .exec
+//                .multi,
+//                .lrem(key: processingQKey, count: 0, value: ""),
+//                .del(key: ""),
+//                .incr(key: RedisKey.failure(consumerName).name),
+//                .lpush(key: RedisKey.log.name, values: [log]),
+//                .exec
             ]
         }
         
