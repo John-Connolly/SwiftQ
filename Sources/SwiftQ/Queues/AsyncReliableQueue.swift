@@ -22,30 +22,30 @@ public final class AsyncReliableQueue {
         let data = try! task.data() // FIX ME!!
 
         let redisData: [RedisData] = [
-            RedisData.bulkString("LPUSH".data(using: .utf8)!),
-            RedisData.bulkString("queue".data(using: .utf8)!),
-            RedisData.bulkString(data),
+            .bulkString("LPUSH".data(using: .utf8)!),
+            .bulkString("queue".data(using: .utf8)!),
+            .bulkString(data),
             ]
-        return redis.send(message: RedisData.array(redisData))
+        return redis.send(message: .array(redisData))
     }
 
     public func enqueue(contentsOf tasks: [Task]) -> EventLoopFuture<[RedisData]> {
         let redisData: [RedisData] = [
-            RedisData.bulkString("LPUSH".data(using: .utf8)!),
-            RedisData.bulkString("queue".data(using: .utf8)!),
+            .bulkString("LPUSH".data(using: .utf8)!),
+            .bulkString("queue".data(using: .utf8)!),
         ]
         let data = tasks.map { RedisData.bulkString(try! $0.data()) }
-        return redis.pipeLine(message: [RedisData.array(redisData + data)])
+        return redis.pipeLine(message: [.array(redisData + data)])
     }
 
     public func bdqueue() {
         let redisData: [RedisData] = [
-            RedisData.bulkString("BRPOPLPUSH".data(using: .utf8)!),
-            RedisData.bulkString("queue".data(using: .utf8)!),
-            RedisData.bulkString("queue2".data(using: .utf8)!),
-            RedisData.bulkString("0".data(using: .utf8)!),
+            .bulkString("BRPOPLPUSH".data(using: .utf8)!),
+            .bulkString("queue".data(using: .utf8)!),
+            .bulkString("queue2".data(using: .utf8)!),
+            .bulkString("0".data(using: .utf8)!),
             ]
-        let resp = bredis.send(message: RedisData.array(redisData))
+        let resp = bredis.send(message: .array(redisData))
         resp.whenSuccess { data in
             switch data {
             case .bulkString(let data):
@@ -64,12 +64,12 @@ public final class AsyncReliableQueue {
 
     public func complete(task: Data) -> EventLoopFuture<RedisData> {
         let redisData: [RedisData] = [
-            RedisData.bulkString("LREM".data(using: .utf8)!),
-            RedisData.bulkString("queue2".data(using: .utf8)!),
-            RedisData.bulkString("0".data(using: .utf8)!),
-            RedisData.bulkString(task),
+            .bulkString("LREM".data(using: .utf8)!),
+            .bulkString("queue2".data(using: .utf8)!),
+            .bulkString("0".data(using: .utf8)!),
+            .bulkString(task),
             ]
-        return redis.send(message: RedisData.array(redisData))
+        return redis.send(message: .array(redisData))
     }
 
     struct Email: Task {

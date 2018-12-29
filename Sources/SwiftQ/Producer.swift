@@ -11,7 +11,7 @@ import Foundation
 public final class Producer {
     
     private let reliableQueue: ReliableQueue
-    
+
     private let scheduledQueue: ScheduledQueue
     
     public init(redisConfig: RedisConfig) throws {

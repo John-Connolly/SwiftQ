@@ -14,8 +14,7 @@ import Foundation
 struct Host {
     
     let name: String
-    
-    
+
     init() {
         self.name = Host.currentHostName()
     }

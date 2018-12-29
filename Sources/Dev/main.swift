@@ -28,24 +28,19 @@ struct TaskInfo<T: Task>: Codable {
 
 }
 
- struct Email: Task {
-
-    let email: String
-
-    func execute(loop: EventLoop) -> EventLoopFuture<()> {
-        print("hello!")
-        return loop.newSucceededFuture(result: ())
-    }
-
-}
-
+let config = Configuration(pollingInterval: 10,
+                           enableScheduling: false,
+                           concurrency: 4,
+                           redisConfig: .development,
+                           tasks: [Email.self]
+)
 
 let email = Email(email: "jconnolly")
-//let info = TaskInfo(email)
-//let data = try! JSONEncoder().encode(info)
-//let json = try! JSONSerialization.jsonObject(with: data, options: .allowFragments)
 
-//print(String(data: try! JSONSerialization.data(withJSONObject: json, options: .prettyPrinted), encoding: .utf8)!)
+
+let consumer = try Consumer(config)
+consumer.run()
+
 
 let group = MultiThreadedEventLoopGroup(numberOfThreads: 2)
 let eventloop = group.next()
@@ -92,3 +87,10 @@ let t = redis.then { queue -> EventLoopFuture<[RedisData]> in
 
 
 RunLoop.main.run()
+
+
+//let info = TaskInfo(email)
+//let data = try! JSONEncoder().encode(info)
+//let json = try! JSONSerialization.jsonObject(with: data, options: .allowFragments)
+
+//print(String(data: try! JSONSerialization.data(withJSONObject: json, options: .prettyPrinted), encoding: .utf8)!)

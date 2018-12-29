@@ -11,15 +11,13 @@ import Dispatch
 
 public final class Consumer {
     
-    private let worker: Worker
-    
-    private let monitor: QueueMonitor
-    
+//    private let worker: Worker
+//
+//    private let monitor: QueueMonitor
+
     private let config: Configuration
-    
-    
+
     public init(_ configuration: Configuration) throws {
-        
         guard configuration.tasks.count > 0 else {
             throw SwiftQError.tasksNotRegistered
         }
@@ -37,26 +35,24 @@ public final class Consumer {
         }
         
         self.config = configuration
-        self.worker = try Worker(decoder: Decoder(types: configuration.tasks),
-                                 config: configuration.redisConfig,
-                                 concurrency: configuration.concurrency,
-                                 queue: configuration.queue,
-                                 consumerName: configuration.consumerName,
-                                 middleware: configuration.middleware)
-        let scheduledQueue = try ScheduledQueue(config: configuration.redisConfig)
-        self.monitor = QueueMonitor(queues: [scheduledQueue], interval: configuration.pollingInterval)
+//        self.worker = try Worker(decoder: Decoder(types: configuration.tasks),
+//                                 config: configuration.redisConfig,
+//                                 concurrency: configuration.concurrency,
+//                                 queue: configuration.queue,
+//                                 consumerName: configuration.consumerName,
+//                                 middleware: configuration.middleware)
+//        let scheduledQueue = try ScheduledQueue(config: configuration.redisConfig)
+//        self.monitor = QueueMonitor(queues: [scheduledQueue], interval: configuration.pollingInterval)
     }
     
     public func run() -> Never {
         if config.enableScheduling {
-            monitor.run()
+//            monitor.run()
         }
         
-        worker.run()
-        
-        let group = DispatchGroup()
-        group.enter()
-        group.wait()
+//        worker.run()
+
+        RunLoop.main.run()
         exit(0)
     }
     

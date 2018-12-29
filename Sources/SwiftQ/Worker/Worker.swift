@@ -43,8 +43,7 @@ final class Worker {
         repeat {
             
             semaphore.wait()
-            
-            AsyncWorker(queue: concurrentQueue) {
+
                 defer {
                     self.semaphore.signal()
                 }
@@ -60,9 +59,7 @@ final class Worker {
                 } catch {
                     Logger.log(error)
                 }
-                
-                }.run()
-            
+
         } while true
         
     }
@@ -124,9 +121,4 @@ final class Worker {
             Logger.log(error)
         }
     }
-}
-
-enum Result<T> {
-    case success(T)
-    case failure(Error)
 }
