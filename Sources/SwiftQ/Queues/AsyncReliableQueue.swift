@@ -56,10 +56,11 @@ public final class AsyncReliableQueue {
         return redis.send(message: .array(command.params2))
     }
 
-    public func blockingDequeue(_ f: @escaping (RedisData) -> ()) {
+    // TODO: maybe have an assert here
+    public func blockingDequeue(_ f: @escaping (Data) -> ()) {
         let resp = sendb(.brpoplpush(q1: "queue", q2: "queue2", timeout: 0))
         resp.whenSuccess { data in
-            f(data)
+            f(data.data!)
             self.bdqueue()
         }
     }

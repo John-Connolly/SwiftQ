@@ -6,12 +6,18 @@
 //
 
 import Foundation
-
+import NIO
 
 final class AsyncWorker {
 
     let queue: AsyncReliableQueue
     let decoder: Decoder
+
+    let taskEventLoop: EventLoop = {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventloop = group.next()
+        return eventloop
+    }()
 
     init(queue: AsyncReliableQueue, decoder: Decoder) {
         self.queue = queue
@@ -21,16 +27,14 @@ final class AsyncWorker {
 
     func run() {
         queue.blockingDequeue { data in
-            switch data {
-            case .bulkString(let data):
-                let task = try! self.decoder.decode(data: data) // FIXME!!
-//                task.execute(loop: self.redis.eventLoop).whenComplete {
-//                    self.complete(task: data).whenComplete {
-//
-//                    }
-//                }
-            default: ()
+            let task = try! self.decoder.decode(data: data)
+            task.execute(loop: self.taskEventLoop).whenComplete {
+                self.complete(task: task)
             }
         }
+    }
+
+    func complete(task: Task) {
+
     }
 }

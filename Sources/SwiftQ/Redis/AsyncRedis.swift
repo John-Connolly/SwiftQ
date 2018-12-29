@@ -99,6 +99,14 @@ public indirect enum RedisData {
     case error(String)
     case integer(Int)
     case array([RedisData])
+
+    var data: Data? {
+        switch self {
+        case .bulkString(let data):
+            return data
+        default: return nil
+        }
+    }
 }
 
 final class RedisEncoder: MessageToByteEncoder {
@@ -110,6 +118,7 @@ final class RedisEncoder: MessageToByteEncoder {
         out.write(string: encoded)
     }
 
+    /// TODO: Switch to return data
     private func encode(data: RedisData) -> String {
         switch data {
         case let .basicString(basicString):

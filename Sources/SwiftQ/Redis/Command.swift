@@ -18,8 +18,8 @@ enum Command {
     case select(db: Int)
     
     // list
-    case lrem(key: String, count: Int, value: Foundation.Data)
-    case lpush(key: String, values: [Foundation.Data])
+    case lrem(key: String, count: Int, value: Data)
+    case lpush(key: String, values: [Data])
     case lrange(key: String, start: Int, stop: Int)
     case brpoplpush(q1: String, q2: String, timeout: Int)
     
@@ -27,7 +27,7 @@ enum Command {
     case get(key: String)
     case del(key: String)
     case set(key: String, value: Data)
-    case mset(EnqueueingBoxes)
+    case mset([String : Data])
     case incr(key: String)
     
     // sorted set
@@ -71,49 +71,31 @@ enum Command {
         case .lpush(let key, let values):
             return [name, key].redisData() + values.map(RedisData.bulkString)
         case .lrange(let key, let start, let stop):
-            return []
+            return [name, key, start.description, stop.description].redisData()
         case .brpoplpush(let q1, let q2, let timeout):
             return [name, q1, q2, timeout.description].redisData()
         case .get(let key):
-            return []
+            return [name, key].redisData()
         case .del(let key):
-            return []
+            return [name, key].redisData()
         case .set(let key, let value):
-            return []
+            return [name, key].redisData() + [RedisData.bulkString(value)]
         case .mset(_):
             return []
         case .incr(let key):
-            return []
+            return [name, key].redisData()
         case .zadd(let queue, let score, let value):
-            return []
+            return [name, queue, score, value].redisData()
         case .zrangebyscore(let key, let min, let max):
-            return []
+            return [name, key, min, max].redisData()
         case .zrem(let key, let values):
-            return []
+            return [name, key].redisData() + values.map(RedisData.bulkString)
         case .sadd(let key, let value):
-            return []
+            return [name, key, value].redisData()
         }
     }
     
 }
-// MSetSequence
-struct EnqueueingBoxes {
-    
-    private let boxes: [EnqueueingBox]
-    
-    init(_ boxes: [EnqueueingBox]) {
-        self.boxes = boxes
-    }
-    
-//    var bytesRepresentable: [BytesRepresentable] {
-//        return boxes.reduce(into: []) { (args: inout [BytesRepresentable], box) in
-//            let keyAndValue:[BytesRepresentable] = [box.uuid, box.task]
-//            args.append(contentsOf: keyAndValue)
-//        }
-//    }
-    
-}
-
 
 extension Array where Element == String {
 

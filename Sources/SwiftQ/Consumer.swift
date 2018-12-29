@@ -36,12 +36,7 @@ public final class Consumer {
         }
         
         self.config = configuration
-//        self.worker = try Worker(decoder: Decoder(types: configuration.tasks),
-//                                 config: configuration.redisConfig,
-//                                 concurrency: configuration.concurrency,
-//                                 queue: configuration.queue,
-//                                 consumerName: configuration.consumerName,
-//                                 middleware: configuration.middleware)
+
 //        let scheduledQueue = try ScheduledQueue(config: configuration.redisConfig)
 //        self.monitor = QueueMonitor(queues: [scheduledQueue], interval: configuration.pollingInterval)
     }
@@ -52,7 +47,18 @@ public final class Consumer {
         let eventloop = group.next()
         let decoder = Decoder(types: config.tasks)
         
-//        worker.run()
+
+        let blockedRedis = AsyncRedis.connect(eventLoop: eventloop)
+        let asyncWorker = AsyncRedis
+            .connect(eventLoop: eventloop).and(blockedRedis)
+            .map(AsyncReliableQueue.init)
+            .map {
+                AsyncWorker.init(queue: $0, decoder: decoder)
+        }
+
+        asyncWorker.whenSuccess {
+            $0.run()
+        }
 
         RunLoop.main.run()
         exit(0)
