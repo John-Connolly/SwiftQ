@@ -26,15 +26,23 @@ final class AsyncWorker {
 
 
     func run() {
-        queue.blockingDequeue { data in
+
+        queue.dequeued = { data in
+
             let task = try! self.decoder.decode(data: data)
             task.execute(loop: self.taskEventLoop).whenComplete {
                 self.complete(task: task)
             }
         }
+
+        queue.bdqueue()
+
     }
 
     func complete(task: Task) {
-
+        print("complete!!")
     }
 }
+
+
+

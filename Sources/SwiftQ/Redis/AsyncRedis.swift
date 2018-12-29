@@ -107,6 +107,14 @@ public indirect enum RedisData {
         default: return nil
         }
     }
+
+    var int: Int? {
+        switch self {
+        case .integer(let int):
+            return int
+        default: return nil
+        }
+    }
 }
 
 final class RedisEncoder: MessageToByteEncoder {

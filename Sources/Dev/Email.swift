@@ -14,7 +14,7 @@ struct Email: Task {
     let email: String
 
     func execute(loop: EventLoop) -> EventLoopFuture<()> {
-        print("hello!")
+        print(email)
         return loop.newSucceededFuture(result: ())
     }
 

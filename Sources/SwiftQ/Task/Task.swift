@@ -10,8 +10,6 @@ import Foundation
 import NIO
 
 public protocol Task: Codable {
-    
-//    var storage: Storage { get }
 
     func execute(loop: EventLoop) -> EventLoopFuture<()>
     
@@ -22,8 +20,7 @@ public protocol Task: Codable {
 }
 
 extension Task {
-    
-    
+
     public var recoveryStrategy: RecoveryStrategy {
         return .none
     }
@@ -31,14 +28,25 @@ extension Task {
     public var queue: String {
         return "default"
     }
+
+    public func Info() {
+//        _ = TaskInfo<S
+    }
     
 //    var uuid: String {
 //        return storage.uuid
 //    }
 
     init(data: Data) throws {
+//        TaskInfo<Email.self>
         self = try JSONDecoder().decode(Self.self, from: data)
     }
+
+    static func create(from data: Data) -> Task {
+        return try! JSONDecoder().decode(TaskInfo<Self>.self, from: data).task
+    }
+
+
     
     func log(with error: Error, consumer: String) throws -> Data {
 //        let log = Log(message: error.localizedDescription,
@@ -61,7 +69,7 @@ extension Task {
     }
     
     func retry() {
-//        storage.incRetry()
+        fatalError()
     }
     
 }

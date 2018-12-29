@@ -13,7 +13,6 @@ import NIO
 public final class Consumer {
     
 //    private let worker: Worker
-//
 //    private let monitor: QueueMonitor
 
     private let config: Configuration
@@ -50,7 +49,8 @@ public final class Consumer {
 
         let blockedRedis = AsyncRedis.connect(eventLoop: eventloop)
         let asyncWorker = AsyncRedis
-            .connect(eventLoop: eventloop).and(blockedRedis)
+            .connect(eventLoop: eventloop)
+            .and(blockedRedis)
             .map(AsyncReliableQueue.init)
             .map {
                 AsyncWorker.init(queue: $0, decoder: decoder)

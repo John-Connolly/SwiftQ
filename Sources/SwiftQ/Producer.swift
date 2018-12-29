@@ -7,28 +7,34 @@
 //
 
 import Foundation
+import NIO
 
 public final class Producer {
-    
-////    private let reliableQueue: ReliableQueue
-//
+
 //    private let scheduledQueue: ScheduledQueue
-//    
-//    public init(redisConfig: RedisConfig) throws {
-////        self.reliableQueue = try ReliableQueue(config: redisConfig, concurrency: 4)
-//        self.scheduledQueue = try ScheduledQueue(config: redisConfig)
-//        
-//        if redisConfig.password == nil {
-//            Logger.warning("Insecure redis configuration, always set a password")
-//        }
-//    }
-//    
-//    /// Pushes a task onto the the tasks specific queue.  Unless specified
-//    /// this will be the default work queue.
-//    public func enqueue(task: Task) throws {
-//        try reliableQueue.enqueue(item: EnqueueingBox(task))
-//    }
-//    
+
+    private let reliableQueue: AsyncReliableQueue
+
+    public init(reliableQueue: AsyncReliableQueue) {
+        self.reliableQueue = reliableQueue
+    }
+
+    public static func connect(on eventloop: EventLoop) -> EventLoopFuture<Producer> {
+        let blockedRedis = AsyncRedis.connect(eventLoop: eventloop)
+        return AsyncRedis
+            .connect(eventLoop: eventloop)
+            .and(blockedRedis)
+            .map(AsyncReliableQueue.init)
+            .map(Producer.init)
+    }
+
+   /// Pushes a task onto the the tasks specific queue.  Unless specified
+   /// this will be the default work queue.
+    public func enqueue<T: Task>(task: T) -> EventLoopFuture<Int> {
+        let taskInfo = TaskInfo(task)
+        return reliableQueue.enqueue(task: taskInfo)
+    }
+
 //    /// Pushes multiple tasks onto the default work queue only.
 //    public func enqueue(tasks: [Task]) throws {
 //        let boxes = try tasks.map(EnqueueingBox.init)

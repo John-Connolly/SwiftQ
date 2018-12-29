@@ -28,7 +28,7 @@ extension Dictionary where Key: ExpressibleByStringLiteral {
     }
     
     func taskName() throws -> String {
-        let storage = self[.storage] as? [String: Any]
+        let storage = self as? [String: Any]
         return try storage
             .flatMap { $0[.name] as? String }
             .or(throw: SwiftQError.taskNotFound)

@@ -13,14 +13,20 @@ public final class AsyncReliableQueue {
     let redis: AsyncRedis
     let bredis: AsyncRedis
 
+    var dequeued: ((Data) -> ())?
+
     public init(redis: AsyncRedis, bredis: AsyncRedis) {
         self.redis = redis
         self.bredis = bredis
     }
 
-    public func enqueue(task: Task) -> EventLoopFuture<RedisData> {
-        let data = try! task.data() // FIX ME!!
-        return send(.lpush(key: "queue", values: [data]))
+    public func enqueue<C: Codable>(task: C) -> EventLoopFuture<Int> {
+        let encoder = JSONEncoder() // Fix this!
+        if #available(OSX 10.13, *) {
+            encoder.outputFormatting = .sortedKeys
+        }
+        let data = try! encoder.encode(task)
+        return send(.lpush(key: "queue", values: [data])).map { $0.int! }
     }
 
     public func enqueue(contentsOf tasks: [Task]) -> EventLoopFuture<[RedisData]> {
@@ -35,16 +41,8 @@ public final class AsyncReliableQueue {
     public func bdqueue() {
         let resp = sendb(.brpoplpush(q1: "queue", q2: "queue2", timeout: 0))
         resp.whenSuccess { data in
-            switch data {
-            case .bulkString(let data):
-                let task = try! JSONDecoder().decode(Email.self, from: data)
-                task.execute(loop: self.redis.eventLoop).whenComplete {
-                    self.complete(task: data).whenComplete {
-                        self.bdqueue()
-                    }
-                }
-            default: ()
-            }
+              self.dequeued?(data.data!)
+              self.bdqueue()
         }
     }
 
@@ -56,28 +54,10 @@ public final class AsyncReliableQueue {
         return redis.send(message: .array(command.params2))
     }
 
-    // TODO: maybe have an assert here
-    public func blockingDequeue(_ f: @escaping (Data) -> ()) {
-        let resp = sendb(.brpoplpush(q1: "queue", q2: "queue2", timeout: 0))
-        resp.whenSuccess { data in
-            f(data.data!)
-            self.bdqueue()
-        }
-    }
-
     public func complete(task: Data) -> EventLoopFuture<RedisData> {
         return send(.lrem(key: "queue2", count: 0, value: task))
     }
 
-    struct Email: Task {
-
-        let email: String
-
-        func execute(loop: EventLoop) -> EventLoopFuture<()> {
-            return loop.newSucceededFuture(result: ())
-        }
-
-    }
 
 }
 
