@@ -8,12 +8,11 @@ let package = Package(
         .library(name: "SwiftQ", targets: ["SwiftQ"]),
         ],
     dependencies: [
-        .package(url: "https://github.com/vapor/redis.git", from: "2.1.0"),
         .package(url: "https://github.com/apple/swift-nio.git", .exact("1.8.0")),
     ],
     targets: [
         .target(name: "Dev", dependencies: ["SwiftQ"]),
-        .target(name: "SwiftQ", dependencies: ["Redis", "NIO"]),
+        .target(name: "SwiftQ", dependencies: ["NIO"]),
         .testTarget(name: "SwiftQTests", dependencies: ["SwiftQ"])
     ]
 )

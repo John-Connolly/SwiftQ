@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Redis
 
 enum Command {
     
@@ -27,14 +26,14 @@ enum Command {
     // keys
     case get(key: String)
     case del(key: String)
-    case set(key: String, value: BytesRepresentable)
+    case set(key: String, value: Data)
     case mset(EnqueueingBoxes)
     case incr(key: String)
     
     // sorted set
     case zadd(queue: String, score: String, value: String)
     case zrangebyscore(key: String, min: String, max: String)
-    case zrem(key: String, values: [BytesRepresentable])
+    case zrem(key: String, values: [Data])
     
     // set
     case sadd(key: String, value: String)
@@ -106,12 +105,12 @@ struct EnqueueingBoxes {
         self.boxes = boxes
     }
     
-    var bytesRepresentable: [BytesRepresentable] {
-        return boxes.reduce(into: []) { (args: inout [BytesRepresentable], box) in
-            let keyAndValue:[BytesRepresentable] = [box.uuid, box.task]
-            args.append(contentsOf: keyAndValue)
-        }
-    }
+//    var bytesRepresentable: [BytesRepresentable] {
+//        return boxes.reduce(into: []) { (args: inout [BytesRepresentable], box) in
+//            let keyAndValue:[BytesRepresentable] = [box.uuid, box.task]
+//            args.append(contentsOf: keyAndValue)
+//        }
+//    }
     
 }
 
