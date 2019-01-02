@@ -36,9 +36,16 @@ final class AsyncWorker {
     }
 
     func complete(task: Data) {
-        queue.complete(task: task).whenComplete {
-            print("complete!!")
+        let future = queue.complete(task: task)
+        future.whenFailure { error in
+            print(error)
         }
+
+        future.whenSuccess { data in
+            print(data)
+        }
+
+
     }
 }
 

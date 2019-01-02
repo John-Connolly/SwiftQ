@@ -9,6 +9,17 @@ import Foundation
 import NIO
 import SwiftQ
 
+
+// TODO:
+// Figure out how eventloops should be distributed
+// Think about backpressure
+// Implement stats
+// Implement preperations
+// Implement monitoring
+// Implement heartbeat
+// Implement sorted sets
+
+
 let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 let eventloop = group.next()
 

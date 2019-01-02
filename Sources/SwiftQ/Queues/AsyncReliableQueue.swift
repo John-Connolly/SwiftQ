@@ -54,10 +54,16 @@ public final class AsyncReliableQueue {
         return redis.send(message: .array(command.params2))
     }
 
-    public func complete(task: Data) -> EventLoopFuture<RedisData> {
-        return send(.lrem(key: "queue2", count: 0, value: task))
+    private func send(_ commands: [Command]) -> EventLoopFuture<RedisData> {
+       return redis.send(message: .array(commands.flatMap { $0.params2 }))
     }
 
+    public func complete(task: Data) -> EventLoopFuture<[RedisData]> {
+       return redis.pipeLine(message: [
+            .array(Command.lrem(key: "queue2", count: 1, value: task).params2),
+            .array(Command.incr(key: "stats:proccessed").params2),
+            ])
+    }
 
 }
 

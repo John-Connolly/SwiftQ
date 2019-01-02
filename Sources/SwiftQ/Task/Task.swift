@@ -29,12 +29,6 @@ extension Task {
         return "default"
     }
 
-
-    
-//    var uuid: String {
-//        return storage.uuid
-//    }
-
     init(data: Data) throws {
         self = try JSONDecoder().decode(Self.self, from: data)
     }
@@ -54,7 +48,7 @@ extension Task {
     
 
     func shouldRetry(_ retries: Int) -> Bool {
-        return true// retries > storage.retryCount
+        fatalError()
     }
     
     func retry() {
