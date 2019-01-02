@@ -29,6 +29,8 @@ public struct Configuration {
     let consumerName: String?
 
     let preparations: [Preparations]
+
+    let repeatedTasks: [RepeatedTasks]
     
     public init(pollingInterval: Int,
          enableScheduling: Bool,
@@ -48,6 +50,10 @@ public struct Configuration {
         self.preparations = [
             onBoot,
             consumerInfo
+        ]
+
+        self.repeatedTasks = [
+            heartBeat,
         ]
     }
     

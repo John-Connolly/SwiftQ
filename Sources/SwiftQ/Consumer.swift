@@ -65,42 +65,23 @@ public final class Consumer {
                 }
         }
 
+
         RunLoop.main.run()
         exit(0)
     }
 
     func run(preparations: [Preparations], with redis: AsyncRedis) -> EventLoopFuture<()> {
-        let results = preparations.map { prep in
-            prep(redis)
+        let results = preparations.map { prepare in
+            prepare(redis)
         }
         return flatten(array: results, on: redis.eventLoop).map { _ in
             return ()
         }
     }
-    
 }
 
 
-public typealias Preparations = (AsyncRedis) -> EventLoopFuture<()>
 
-public func onBoot(redis: AsyncRedis) -> EventLoopFuture<()> {
-    let hostname = Host().name
-    let boot = redis.send(.sadd(key: "processes", value: hostname)).map { _ in
-        return ()
-    }
-    return boot
-}
-
-public func consumerInfo(redis: AsyncRedis) -> EventLoopFuture<()> {
-    let consumerInfo = ConsumerInfo.initial
-    let data = encode(item: consumerInfo)
-    return redis.send(.set(key: Host().name, value: data)).map { value -> () in
-        return ()
-    }
-}
-
-
-typealias RepeatedTasks = (AsyncRedis) -> EventLoopFuture<()>
 
 // TODO: Move this
 func flatten<T>(array: [EventLoopFuture<T>], on eventLoop: EventLoop) -> EventLoopFuture<[T]> {

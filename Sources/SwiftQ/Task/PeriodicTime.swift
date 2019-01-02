@@ -15,7 +15,6 @@ public enum PeriodicTime {
     case daily(minute: Int, hour: Int)
     case weekly(minute: Int, hour: Int, day: Day)
     
-    
     private var unixTime: Int {
         switch self {
         case .secondly(let seconds):
@@ -92,8 +91,6 @@ public enum PeriodicTime {
     func addDays(_ days: Int) -> Date {
         return startOfDay().addingTimeInterval(TimeInterval(days * 86_400))
     }
-    
-    
 }
 
 public enum Day: Int {

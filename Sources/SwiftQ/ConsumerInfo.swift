@@ -8,9 +8,9 @@
 import Foundation
 
 struct ConsumerInfo: Codable {
-    let beat: Int
+    var beat: Int
     let info: Info
-    let busy: Int
+    var busy: Int
 
     struct Info: Codable {
         let hostname: String
@@ -22,6 +22,10 @@ struct ConsumerInfo: Codable {
                      info: Info.init(hostname: Host().name,
                      startedAt:  Date().unixTime),
                      busy: 0)
+    }
+
+    mutating func incrHeartbeat() {
+        beat = Date().unixTime
     }
 
     var allFields: [String: String] {
