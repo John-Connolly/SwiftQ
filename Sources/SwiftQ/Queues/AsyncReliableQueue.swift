@@ -21,21 +21,12 @@ public final class AsyncReliableQueue {
     }
 
     public func enqueue<C: Codable>(task: C) -> EventLoopFuture<Int> {
-        let encoder = JSONEncoder() // Fix this!
-        if #available(OSX 10.13, *) {
-            encoder.outputFormatting = .sortedKeys
-        }
-        let data = try! encoder.encode(task)
+        let data = encode(item: task)
         return send(.lpush(key: "queue", values: [data])).map { $0.int! }
     }
 
-    public func enqueue(contentsOf tasks: [Task]) -> EventLoopFuture<[RedisData]> {
-        let redisData: [RedisData] = [
-            .bulkString("LPUSH".data(using: .utf8)!),
-            .bulkString("queue".data(using: .utf8)!),
-        ]
-//        let data = tasks.map { RedisData.bulkString(try! $0.data()) }
-        return redis.pipeLine(message: [.array(redisData )])//FIXME
+    public func enqueue<C: Codable>(contentsOf tasks: [C]) -> EventLoopFuture<Int> {
+        return send(.lpush(key: "queue", values: tasks.map(encode))).map { $0.int! }
     }
 
     public func bdqueue() {
@@ -73,4 +64,15 @@ public protocol AsyncQueue {
     func blockingDequeue(_ f: @escaping (RedisData) -> ())
     func complete(task: Data) -> EventLoopFuture<RedisData>
 
+}
+
+
+
+// TODO: Return result here!
+func encode<C: Codable>(item: C) -> Data {
+    let encoder = JSONEncoder()
+    if #available(OSX 10.13, *) {
+        encoder.outputFormatting = .sortedKeys
+    }
+    return try! encoder.encode(item)
 }

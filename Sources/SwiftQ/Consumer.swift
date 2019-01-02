@@ -12,7 +12,6 @@ import NIO
 
 public final class Consumer {
     
-//    private let worker: Worker
 //    private let monitor: QueueMonitor
 
     private let config: Configuration

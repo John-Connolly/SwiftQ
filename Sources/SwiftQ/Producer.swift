@@ -35,12 +35,12 @@ public final class Producer {
         return reliableQueue.enqueue(task: taskInfo)
     }
 
-//    /// Pushes multiple tasks onto the default work queue only.
-//    public func enqueue(tasks: [Task]) throws {
-//        let boxes = try tasks.map(EnqueueingBox.init)
-//        try reliableQueue.enqueue(contentsOf: boxes)
-//    }
-//    
+    /// Pushes multiple tasks onto the default work queue only.
+    public func enqueue<T: Task>(tasks: [T]) -> EventLoopFuture<Int> {
+        return reliableQueue.enqueue(contentsOf: tasks.map(TaskInfo.init))
+    }
+
+
 //    /// Pushes a task on the scheduled queue
 //    public func enqueue(task: Task, time: Time) throws {
 ////        task.storage.set(type: .scheduled)

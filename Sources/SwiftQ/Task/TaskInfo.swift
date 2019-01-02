@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TaskInfo<T: Task>: InfoType {
+struct TaskInfo<T: Task>: Codable {
     let task: T
     let uuid: String
     let name: String
@@ -23,15 +23,4 @@ struct TaskInfo<T: Task>: InfoType {
         self.enqueuedAt = Date().unixTime
     }
 
-}
-
-protocol InfoType: Codable {
-
-}
-
-extension InfoType {
-    init(data: Data) throws {
-        //        TaskInfo<Email.self>
-        self = try JSONDecoder().decode(Self.self, from: data)
-    }
 }
