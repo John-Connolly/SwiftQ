@@ -18,6 +18,7 @@ import SwiftQ
 // Implement monitoring
 // Implement heartbeat
 // Implement sorted sets
+// Implement signal handling for safe shutdown
 
 
 let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -36,10 +37,10 @@ let emails = (1...1000).map { _ in
     return email
 }
 
-let resp = Producer.connect(on: eventloop).map { producer in
-//    producer.enqueue(task: email)
-    producer.enqueue(tasks: emails)
-}
+//let resp = Producer.connect(on: eventloop).map { producer in
+////    producer.enqueue(task: email)
+//    producer.enqueue(tasks: emails)
+//}
 
 //RunLoop.main.run()
 

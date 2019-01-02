@@ -12,7 +12,7 @@ final class AsyncWorker {
 
     let queue: AsyncReliableQueue
     let decoder: Decoder
-
+    
     let taskEventLoop: EventLoop = {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventloop = group.next()
@@ -23,6 +23,7 @@ final class AsyncWorker {
         self.queue = queue
         self.decoder = decoder
     }
+
 
     func run() {
         queue.dequeued = { data in
@@ -41,9 +42,9 @@ final class AsyncWorker {
             print(error)
         }
 
-        future.whenSuccess { data in
-            print(data)
-        }
+//        future.whenSuccess { data in
+////            print(data)
+//        }
 
 
     }

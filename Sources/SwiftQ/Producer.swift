@@ -28,8 +28,8 @@ public final class Producer {
             .map(Producer.init)
     }
 
-   /// Pushes a task onto the the tasks specific queue.  Unless specified
-   /// this will be the default work queue.
+    /// Pushes a task onto the the tasks specific queue.  Unless specified
+    /// this will be the default work queue.
     public func enqueue<T: Task>(task: T) -> EventLoopFuture<Int> {
         let taskInfo = TaskInfo(task)
         return reliableQueue.enqueue(task: taskInfo)

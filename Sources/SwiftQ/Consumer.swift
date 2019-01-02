@@ -55,12 +55,68 @@ public final class Consumer {
                 AsyncWorker.init(queue: $0, decoder: decoder)
         }
 
-        asyncWorker.whenSuccess {
-            $0.run()
+        asyncWorker.whenSuccess { worker -> () in
+            AsyncRedis
+                .connect(eventLoop: eventloop)
+                .then {
+                    self.run(preparations: self.config.preparations, with: $0)
+                }.whenSuccess {
+                    worker.run()
+                }
         }
 
         RunLoop.main.run()
         exit(0)
     }
+
+    func run(preparations: [Preparations], with redis: AsyncRedis) -> EventLoopFuture<()> {
+        let results = preparations.map { prep in
+            prep(redis)
+        }
+        return flatten(array: results, on: redis.eventLoop).map { _ in
+            return ()
+        }
+    }
     
+}
+
+
+public typealias Preparations = (AsyncRedis) -> EventLoopFuture<()>
+
+public func onBoot(redis: AsyncRedis) -> EventLoopFuture<()> {
+    let hostname = Host().name
+    let boot = redis.send(.sadd(key: "processes", value: hostname)).map { _ in
+        return ()
+    }
+    return boot
+}
+
+public func consumerInfo(redis: AsyncRedis) -> EventLoopFuture<()> {
+    let consumerInfo = ConsumerInfo.initial
+    let data = encode(item: consumerInfo)
+    return redis.send(.set(key: Host().name, value: data)).map { value -> () in
+        return ()
+    }
+}
+
+
+typealias RepeatedTasks = (AsyncRedis) -> EventLoopFuture<()>
+
+// TODO: Move this
+func flatten<T>(array: [EventLoopFuture<T>], on eventLoop: EventLoop) -> EventLoopFuture<[T]> {
+    var expectations: [T] = []
+    let promise: EventLoopPromise<[T]> = eventLoop.newPromise()
+    array.forEach { future in
+        future.whenSuccess { item in
+            expectations.append(item)
+            if expectations.count == array.count {
+                promise.succeed(result: expectations)
+            }
+        }
+        future.whenFailure { error in
+            promise.fail(error: error)
+        }
+
+    }
+    return promise.futureResult
 }

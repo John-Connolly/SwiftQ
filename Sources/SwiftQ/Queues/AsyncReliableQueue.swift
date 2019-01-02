@@ -22,32 +22,21 @@ public final class AsyncReliableQueue {
 
     public func enqueue<C: Codable>(task: C) -> EventLoopFuture<Int> {
         let data = encode(item: task)
-        return send(.lpush(key: "queue", values: [data])).map { $0.int! }
+        return redis.send(.lpush(key: "queue", values: [data])).map { $0.int! }
     }
 
     public func enqueue<C: Codable>(contentsOf tasks: [C]) -> EventLoopFuture<Int> {
-        return send(.lpush(key: "queue", values: tasks.map(encode))).map { $0.int! }
+        return redis.send(.lpush(key: "queue", values: tasks.map(encode))).map { $0.int! }
     }
 
     public func bdqueue() {
-        let resp = sendb(.brpoplpush(q1: "queue", q2: "queue2", timeout: 0))
+        let resp = bredis.send(.brpoplpush(q1: "queue", q2: "queue2", timeout: 0))
         resp.whenSuccess { data in
               self.dequeued?(data.data!)
               self.bdqueue()
         }
     }
 
-    private func sendb(_ command: Command) -> EventLoopFuture<RedisData> {
-        return bredis.send(message: .array(command.params2))
-    }
-
-    private func send(_ command: Command) -> EventLoopFuture<RedisData> {
-        return redis.send(message: .array(command.params2))
-    }
-
-    private func send(_ commands: [Command]) -> EventLoopFuture<RedisData> {
-       return redis.send(message: .array(commands.flatMap { $0.params2 }))
-    }
 
     public func complete(task: Data) -> EventLoopFuture<[RedisData]> {
        return redis.pipeLine(message: [
@@ -69,10 +58,15 @@ public protocol AsyncQueue {
 
 
 // TODO: Return result here!
-func encode<C: Codable>(item: C) -> Data {
+func encode<C: Encodable>(item: C) -> Data {
     let encoder = JSONEncoder()
     if #available(OSX 10.13, *) {
         encoder.outputFormatting = .sortedKeys
     }
     return try! encoder.encode(item)
+}
+
+func decode<C: Decodable>(data: Data) -> C {
+    let decoder = JSONDecoder()
+    return try! decoder.decode(C.self, from: data)
 }

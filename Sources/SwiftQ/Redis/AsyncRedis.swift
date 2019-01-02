@@ -18,8 +18,9 @@ public final class AsyncRedis: ChannelDuplexHandler {
     let channel: Channel
 
     var queued = 0
-    var incommingResponses: [RedisData] = []
-    var yeild: (([RedisData]) -> ())?
+    var incommingResponses: [RedisData] = [] // TODO: Remove!
+    var yeild: (([RedisData]) -> ())? // TODO: Remove!
+    var awaiters: [([RedisData]) -> ()] = []
 
     init(_ eventLoop: EventLoop, channel: Channel) {
         self.channel = channel
@@ -44,12 +45,8 @@ public final class AsyncRedis: ChannelDuplexHandler {
 
     public func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
         let input = unwrapInboundIn(data)
-        incommingResponses.append(input)
-        queued -= 1
-//        if queued == 0 {
-            yeild?(incommingResponses)
-            incommingResponses.removeAll()
-//        }
+        let awaiter = awaiters.removeFirst()
+        awaiter([input])
     }
 
 
@@ -60,9 +57,11 @@ public final class AsyncRedis: ChannelDuplexHandler {
         _ = channel.write(wrapOutboundOut([message]))
         queued += 1
         let promise: EventLoopPromise<RedisData> = channel.eventLoop.newPromise()
-        yeild = { messages in
+
+        let awaiter = { (messages: [RedisData]) in
             promise.succeed(result: messages[0])
         }
+        awaiters.append(awaiter)
 
         return promise.futureResult
     }
@@ -84,6 +83,15 @@ public final class AsyncRedis: ChannelDuplexHandler {
     public func pipeLineStream(message: (StreamState) -> ()) {
 
     }
+
+    func send(_ command: Command) -> EventLoopFuture<RedisData> {
+        return send(message: .array(command.params2))
+    }
+
+    func send(_ commands: [Command]) -> EventLoopFuture<RedisData> {
+        return send(message: .array(commands.flatMap { $0.params2 }))
+    }
+
 
 }
 
@@ -123,29 +131,29 @@ final class RedisEncoder: MessageToByteEncoder {
 
     func encode(ctx: ChannelHandlerContext, data: RedisEncoder.OutboundIn, out: inout ByteBuffer) throws {
         let encoded = data.map(encode).joined()
-        out.write(string: encoded)
+        out.write(bytes: encoded)
     }
 
     /// TODO: Switch to return data
-    private func encode(data: RedisData) -> String {
+    private func encode(data: RedisData) -> Data {
         switch data {
         case let .basicString(basicString):
-            return "+\(basicString)\r\n"
+            return Data("+\(basicString)\r\n".utf8)
         case let .error(err):
-            return "-\(err)\r\n"
+            return Data("-\(err)\r\n".utf8)
         case let .integer(integer):
-            return ":\(integer)\r\n"
+            return Data(":\(integer)\r\n".utf8)
         case let .bulkString(bulkData):
-            let str = String(bytes: bulkData, encoding: .utf8)!
-            return "$\(bulkData.count.description)\r\n" + str + "\r\n"
+//            let str = String(bytes: bulkData, encoding: .utf8)!
+            return Data("$\(bulkData.count.description)\r\n".utf8) + bulkData + Data("\r\n".utf8)
         case .null:
-            return "$-1\r\n"
+            return Data("$-1\r\n".utf8)
         case let .array(array):
             let dataEncodedArray = array.map(encode(data:)).joined()
-            return "*\(array.count)\r\n" + dataEncodedArray
+            return Data("*\(array.count)\r\n".utf8) + dataEncodedArray
         }
     }
-
+    
 }
 
 

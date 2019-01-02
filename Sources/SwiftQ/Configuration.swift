@@ -28,6 +28,7 @@ public struct Configuration {
     /// If not provided the servers hostname will be used.
     let consumerName: String?
 
+    let preparations: [Preparations]
     
     public init(pollingInterval: Int,
          enableScheduling: Bool,
@@ -44,6 +45,10 @@ public struct Configuration {
         self.tasks = tasks
         self.queue = queue
         self.consumerName = consumerName
+        self.preparations = [
+            onBoot,
+            consumerInfo
+        ]
     }
     
 }
