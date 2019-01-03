@@ -14,7 +14,6 @@ struct Decoder {
     
     private let resources: [InitResource]
     
-    
     init(types: [Task.Type]) {
         self.types = types
         self.resources = types.map(InitResource.init)

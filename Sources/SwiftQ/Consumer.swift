@@ -30,7 +30,7 @@ public final class Consumer {
         }
         
         if configuration.redisConfig.password == nil {
-            Logger.warning("Insecure redis configuration, always set a password")
+            print("Insecure redis configuration, always set a password")
         }
         
         self.config = configuration
