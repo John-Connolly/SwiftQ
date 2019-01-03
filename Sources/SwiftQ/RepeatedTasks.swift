@@ -24,7 +24,7 @@ public func heartBeat(redis: AsyncRedis) -> EventLoopFuture<()> {
     }
 }
 
-final class RepeatedTask {
+final class RepeatedTaskRunner {
 
     let eventloop: EventLoop
     let redis: AsyncRedis
@@ -40,14 +40,12 @@ final class RepeatedTask {
         self.tasks = tasks
     }
 
-
     func run() {
         let _ = eventloop.scheduleTask(in: TimeAmount.seconds(10)) {
             if !self.canceled {
                 self.runReapeted().whenComplete {
                     self.run()
                 }
-
             }
         }
     }
@@ -55,6 +53,13 @@ final class RepeatedTask {
     private func runReapeted() -> EventLoopFuture<[()]> {
         return flatten(array: tasks.map { $0(redis) }, on: eventloop)
     }
-    
 
+    public static func connect(on eventloop: EventLoop, with tasks: [RepeatedTasks]) -> EventLoopFuture<RepeatedTaskRunner> {
+        return AsyncRedis
+            .connect(eventLoop: eventloop)
+            .map { redis in
+               return RepeatedTaskRunner(on: eventloop, with: redis, tasks: tasks)
+            }
+    }
+    
 }

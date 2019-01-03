@@ -38,10 +38,10 @@ let emails = (1...100_000).map { _ in
     return email
 }
 
-let resp = Producer.connect(on: eventloop).then { producer in
-//    producer.enqueue(task: email)
-    producer.enqueue(tasks: emails)
-}
+//let resp = Producer.connect(on: eventloop).then { producer in
+////    producer.enqueue(task: email)
+//    producer.enqueue(tasks: emails)
+//}
 
 
 

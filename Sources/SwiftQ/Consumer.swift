@@ -34,21 +34,25 @@ public final class Consumer {
         }
         
         self.config = configuration
-
 //        let scheduledQueue = try ScheduledQueue(config: configuration.redisConfig)
-//        self.monitor = QueueMonitor(queues: [scheduledQueue], interval: configuration.pollingInterval)
+
     }
-    
+
+    /// TODO: preperations and repeated tasks should only happen on 1 event loop
     public func run() -> Never {
 
         let group = MultiThreadedEventLoopGroup(numberOfThreads: config.concurrency)
 
-        for _ in 0..<config.concurrency {
+        for index in 0..<config.concurrency {
 
             let decoder = Decoder(types: config.tasks)
             let eventloop = group.next()
 
             _ = eventloop.submit {
+
+                if index == 0 {
+                    self.runRepeated(on: eventloop)
+                }
 
                 let blockedRedis = AsyncRedis.connect(eventLoop: eventloop)
                 let asyncWorker = AsyncRedis
@@ -62,8 +66,8 @@ public final class Consumer {
                 asyncWorker.whenSuccess { worker -> () in
                     AsyncRedis
                         .connect(eventLoop: eventloop)
-                        .then {
-                            self.run(preparations: self.config.preparations, with: $0)
+                        .then { redis in
+                            self.run(preparations: self.config.preparations, with: redis)
                         }.whenSuccess {
                             worker.run()
                     }
@@ -76,7 +80,15 @@ public final class Consumer {
         exit(0)
     }
 
-    func run(preparations: [Preparations], with redis: AsyncRedis) -> EventLoopFuture<()> {
+    private func runRepeated(on eventloop: EventLoop) {
+        RepeatedTaskRunner
+            .connect(on: eventloop, with: self.config.repeatedTasks)
+            .whenSuccess { runner in
+                runner.run()
+            }
+    }
+
+    private func run(preparations: [Preparations], with redis: AsyncRedis) -> EventLoopFuture<()> {
         let results = preparations.map { prepare in
             prepare(redis)
         }
