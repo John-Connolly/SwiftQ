@@ -17,9 +17,6 @@ public final class AsyncRedis: ChannelDuplexHandler {
     let eventLoop: EventLoop
     let channel: Channel
 
-    var queued = 0
-    var incommingResponses: [RedisData] = [] // TODO: Remove!
-    var yeild: (([RedisData]) -> ())? // TODO: Remove!
     var awaiters: [([RedisData]) -> ()] = []
 
     init(_ eventLoop: EventLoop, channel: Channel) {
@@ -55,7 +52,7 @@ public final class AsyncRedis: ChannelDuplexHandler {
             channel.flush()
         }
         _ = channel.write(wrapOutboundOut([message]))
-        queued += 1
+
         let promise: EventLoopPromise<RedisData> = channel.eventLoop.newPromise()
 
         let awaiter = { (messages: [RedisData]) in
@@ -66,17 +63,17 @@ public final class AsyncRedis: ChannelDuplexHandler {
         return promise.futureResult
     }
 
-    public func pipeLine(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
+    public func pipeLineq(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
         defer {
             channel.flush()
         }
-        queued = message.count
-        incommingResponses.reserveCapacity(message.count)
         _ = channel.write(wrapOutboundOut(message))
         let promise: EventLoopPromise<[RedisData]> = channel.eventLoop.newPromise()
-        yeild = { messages in
+//        message.forEach
+        let awaiter = { (messages: [RedisData]) in
             promise.succeed(result: messages)
         }
+        awaiters.append(awaiter)
         return promise.futureResult
     }
 
@@ -88,9 +85,10 @@ public final class AsyncRedis: ChannelDuplexHandler {
         return send(message: .array(command.params2))
     }
 
-    func send(_ commands: [Command]) -> EventLoopFuture<RedisData> {
-        return send(message: .array(commands.flatMap { $0.params2 }))
-    }
+//
+//    func send(_ commands: [Command]) -> EventLoopFuture<RedisData> {
+//        return send(message: .array(commands.flatMap { $0.params2 }))
+//    }
 
 
 }

@@ -33,20 +33,31 @@ let config = Configuration(pollingInterval: 10,
 
 let email = Email(email: "jconnolly2")
 
-let emails = (1...1000).map { _ in
+let emails = (1...100_000).map { _ in
     return email
 }
 
-//let resp = Producer.connect(on: eventloop).map { producer in
-///   producer.enqueue(task: email)
-//    producer.enqueue(tasks: emails)
-//}
+let resp = Producer.connect(on: eventloop).then { producer in
+//    producer.enqueue(task: email)
+    producer.enqueue(tasks: emails)
+}
 
-//RunLoop.main.run()
+
 
 let consumer = try Consumer(config)
 consumer.run()
 
+//AsyncRedis.connect(eventLoop: eventloop).then { redis in
+//    redis.pipeLine(message: [
+//        .array(Command.incr(key: "test").params2),
+//        .array(Command.incr(key: "test").params2),
+//        .array(Command.incr(key: "test").params2),
+//        .array(Command.incr(key: "test").params2),
+//        .array(Command.incr(key: "test").params2),
+//        ])
+//}
+//
+RunLoop.main.run()
 
 //let info = TaskInfo(email)
 //let data = try! JSONEncoder().encode(info)

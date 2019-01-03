@@ -26,13 +26,5 @@ extension Dictionary where Key: ExpressibleByStringLiteral {
             self[key.rawValue as! Key] = newValue
         }
     }
-
-    // FIXME
-    func taskName() throws -> String {
-        let storage = self as? [String: Any]
-        return try storage
-            .flatMap { $0[.name] as? String }
-            .or(throw: SwiftQError.taskNotFound)
-    }
     
 }

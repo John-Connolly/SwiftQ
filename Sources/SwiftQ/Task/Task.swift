@@ -38,7 +38,6 @@ extension Task {
     }
 
 
-    
     func log(with error: Error, consumer: String) {
 //        let log = Log(message: error.localizedDescription,
 //                      consumer: consumer,

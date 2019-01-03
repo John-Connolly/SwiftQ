@@ -41,28 +41,38 @@ public final class Consumer {
     
     public func run() -> Never {
 
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventloop = group.next()
-        let decoder = Decoder(types: config.tasks)
-        
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 6)
 
-        let blockedRedis = AsyncRedis.connect(eventLoop: eventloop)
-        let asyncWorker = AsyncRedis
-            .connect(eventLoop: eventloop)
-            .and(blockedRedis)
-            .map(AsyncReliableQueue.init)
-            .map {
-                AsyncWorker.init(queue: $0, decoder: decoder)
-        }
 
-        asyncWorker.whenSuccess { worker -> () in
-            AsyncRedis
-                .connect(eventLoop: eventloop)
-                .then {
-                    self.run(preparations: self.config.preparations, with: $0)
-                }.whenSuccess {
-                    worker.run()
+
+        for _ in 0..<6 {
+            let decoder = Decoder(types: config.tasks)
+            let eventloop = group.next()
+
+            _ = eventloop.submit {
+
+                let blockedRedis = AsyncRedis.connect(eventLoop: eventloop)
+                let asyncWorker = AsyncRedis
+                    .connect(eventLoop: eventloop)
+                    .and(blockedRedis)
+                    .map(AsyncReliableQueue.init)
+                    .map {
+                        AsyncWorker.init(queue: $0, decoder: decoder)
                 }
+
+                asyncWorker.whenSuccess { worker -> () in
+                    AsyncRedis
+                        .connect(eventLoop: eventloop)
+                        .then {
+                            self.run(preparations: self.config.preparations, with: $0)
+                        }.whenSuccess {
+                            worker.run()
+                    }
+                }
+            }
+
+
+            
         }
 
 

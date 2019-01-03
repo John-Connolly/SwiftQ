@@ -19,11 +19,16 @@ struct Decoder {
         self.types = types
         self.resources = types.map(InitResource.init)
     }
+
+    func taskName(from dict: [String: Any]) throws -> String {
+        return try (dict["name"] as? String).or(throw: SwiftQError.taskNotFound)
+    }
     
     /// Returns the correct task based on the task name in storage
     func decode(data: Foundation.Data) throws -> Task {
-        let taskName = try data.jsonDictionary(key: String.self, value: Any.self).taskName()
-        return decode(task: data, with: taskName)
+        let json = try data.jsonDictionary(key: String.self, value: Any.self)
+        let name = try taskName(from: json)
+        return decode(task: data, with: name)
     }
     
     
@@ -32,7 +37,7 @@ struct Decoder {
             .first(where: { $0.name == name })?
             .type)!
 
-        return  taskType.create(from: task)
+        return taskType.create(from: task)
     }
     
 

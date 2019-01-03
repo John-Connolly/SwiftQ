@@ -39,10 +39,10 @@ public final class AsyncReliableQueue {
 
 
     public func complete(task: Data) -> EventLoopFuture<[RedisData]> {
-       return redis.pipeLine(message: [
-            .array(Command.lrem(key: "queue2", count: 1, value: task).params2),
-            .array(Command.incr(key: "stats:proccessed").params2),
-            ])
+        return flatten(array: [
+            redis.send(.lrem(key: "queue2", count: 1, value: task)),
+            redis.send(.incr(key: "stats:proccessed"))
+            ], on: redis.eventLoop)
     }
 
 }

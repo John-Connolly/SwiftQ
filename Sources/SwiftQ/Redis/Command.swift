@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum Command {
+public enum Command {
     
     // transactions
     case multi
@@ -60,7 +60,7 @@ enum Command {
         }
     }
 
-    var params2: [RedisData] {
+    public var params2: [RedisData] {
         switch self {
         case .multi: return []
         case .exec:  return []
