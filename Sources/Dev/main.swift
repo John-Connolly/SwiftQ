@@ -11,12 +11,13 @@ import SwiftQ
 
 
 // TODO:
-// Figure out how eventloops should be distributed
+// Figure out how eventloops should be distributed - DONE
 // Think about backpressure
-// Implement stats
-// Implement preperations
+// Implement stats -
+// Implement preperations - DONE
 // Implement monitoring
-// Implement heartbeat
+// Implement heartbeat - DONE
+// Implement task failure
 // Implement sorted sets
 // Implement signal handling for safe shutdown
 
@@ -57,7 +58,7 @@ consumer.run()
 //        ])
 //}
 //
-RunLoop.main.run()
+//RunLoop.main.run()
 
 //let info = TaskInfo(email)
 //let data = try! JSONEncoder().encode(info)

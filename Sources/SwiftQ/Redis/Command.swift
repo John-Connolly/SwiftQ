@@ -60,7 +60,7 @@ public enum Command {
         }
     }
 
-    public var params2: [RedisData] {
+    public var redisData: [RedisData] {
         switch self {
         case .multi: return []
         case .exec:  return []

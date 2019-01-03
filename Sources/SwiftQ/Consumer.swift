@@ -41,11 +41,10 @@ public final class Consumer {
     
     public func run() -> Never {
 
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 6)
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: config.concurrency)
 
+        for _ in 0..<config.concurrency {
 
-
-        for _ in 0..<6 {
             let decoder = Decoder(types: config.tasks)
             let eventloop = group.next()
 
@@ -71,10 +70,7 @@ public final class Consumer {
                 }
             }
 
-
-            
         }
-
 
         RunLoop.main.run()
         exit(0)

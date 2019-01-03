@@ -63,7 +63,7 @@ public final class AsyncRedis: ChannelDuplexHandler {
         return promise.futureResult
     }
 
-    public func pipeLineq(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
+    public func pipeLine(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
         defer {
             channel.flush()
         }
@@ -82,14 +82,8 @@ public final class AsyncRedis: ChannelDuplexHandler {
     }
 
     func send(_ command: Command) -> EventLoopFuture<RedisData> {
-        return send(message: .array(command.params2))
+        return send(message: .array(command.redisData))
     }
-
-//
-//    func send(_ commands: [Command]) -> EventLoopFuture<RedisData> {
-//        return send(message: .array(commands.flatMap { $0.params2 }))
-//    }
-
 
 }
 
