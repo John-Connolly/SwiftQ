@@ -12,7 +12,7 @@ let package = Package(
 
     ],
     targets: [
-        .target(name: "Dev", dependencies: ["SwiftQ"]),
+        .target(name: "SwiftQDev", dependencies: ["SwiftQ"]),
         .target(name: "SwiftQ", dependencies: ["NIO"]),
         .testTarget(name: "SwiftQTests", dependencies: ["SwiftQ"])
     ]
