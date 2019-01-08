@@ -9,30 +9,15 @@
 import Foundation
 
 enum RedisKey {
-    
-    case workQ(String)
-    case processingQ(String)
-    case scheduledQ
-    case success(String)
-    case failure(String)
-    case log
-    
-    
+
+    case queue(String)
+
     var name: String {
         switch self {
-        case .workQ(let queue):
-            return queue + ":wq"
-        case .processingQ(let queue):
-            return queue + ":pq"
-        case .success(let worker):
-            return worker + ":s"
-        case .failure(let worker):
-            return worker + ":f"
-        case .log:
-            return "logs"
-        case .scheduledQ:
-            return  "default:sq"
+        case .queue(let name):
+            return "queue:" + name
         }
     }
-    
 }
+
+

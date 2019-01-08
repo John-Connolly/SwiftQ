@@ -41,7 +41,7 @@ final class RepeatedTaskRunner {
     }
 
     func run() {
-        let _ = eventloop.scheduleTask(in: TimeAmount.seconds(10)) {
+        let _ = eventloop.scheduleTask(in: TimeAmount.seconds(3)) {
             if !self.canceled {
                 self.runReapeted().whenComplete {
                     self.run()
@@ -54,12 +54,12 @@ final class RepeatedTaskRunner {
         return flatten(array: tasks.map { $0(redis) }, on: eventloop)
     }
 
-    public static func connect(on eventloop: EventLoop, with tasks: [RepeatedTasks]) -> EventLoopFuture<RepeatedTaskRunner> {
+    static func connect(on eventloop: EventLoop, with tasks: [RepeatedTasks]) -> EventLoopFuture<RepeatedTaskRunner> {
         return AsyncRedis
             .connect(eventLoop: eventloop)
             .map { redis in
                return RepeatedTaskRunner(on: eventloop, with: redis, tasks: tasks)
             }
     }
-    
+
 }

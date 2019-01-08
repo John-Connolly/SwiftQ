@@ -33,8 +33,9 @@ extension Task {
         self = try JSONDecoder().decode(Self.self, from: data)
     }
 
+    // FIXME
     static func create(from data: Data) -> Task {
-        return try! JSONDecoder().decode(TaskInfo<Self>.self, from: data).task // FIXME
+        return try! JSONDecoder().decode(TaskInfo<Self>.self, from: data).task
     }
 
 

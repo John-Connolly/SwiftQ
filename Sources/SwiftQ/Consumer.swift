@@ -11,8 +11,6 @@ import Dispatch
 import NIO
 
 public final class Consumer {
-    
-//    private let monitor: QueueMonitor
 
     private let config: Configuration
 
@@ -34,8 +32,6 @@ public final class Consumer {
         }
         
         self.config = configuration
-//        let scheduledQueue = try ScheduledQueue(config: configuration.redisConfig)
-
     }
 
     /// TODO: preperations and repeated tasks should only happen on 1 event loop

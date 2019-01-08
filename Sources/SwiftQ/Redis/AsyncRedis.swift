@@ -63,6 +63,7 @@ public final class AsyncRedis: ChannelDuplexHandler {
         return promise.futureResult
     }
 
+    // FIXME
     public func pipeLine(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
         defer {
             channel.flush()
@@ -317,4 +318,3 @@ extension ByteBuffer {
         return bytes
     }
 }
-
