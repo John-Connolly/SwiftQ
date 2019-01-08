@@ -8,7 +8,6 @@
 
 import Foundation
 import NIO
-import Terse
 
 public final class Producer {
 

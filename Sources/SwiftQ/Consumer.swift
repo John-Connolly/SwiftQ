@@ -9,7 +9,6 @@
 import Foundation
 import Dispatch
 import NIO
-import Terse
 
 public final class Consumer {
 
