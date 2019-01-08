@@ -11,12 +11,12 @@ import Foundation
 struct Decoder {
     
     private let types:  [Task.Type]
-    
-    private let resources: [InitResource] // TODO: make a dictionary!
+    private let resources: [String : Task.Type]
     
     init(types: [Task.Type]) {
         self.types = types
-        self.resources = types.map(InitResource.init)
+        let keyValues = types.map { (String(describing: $0), $0) }
+        self.resources = Dictionary(uniqueKeysWithValues: keyValues)
     }
 
     func taskName(from dict: [String: Any]) throws -> String {
@@ -26,17 +26,12 @@ struct Decoder {
     func decode(data: Foundation.Data) throws -> Task {
         let json = try data.jsonDictionary(key: String.self, value: Any.self)
         let name = try taskName(from: json)
-        return decode(task: data, with: name)
+        return try decode(task: data, with: name)
     }
 
-    private func decode(task: Data, with name: String) -> Task {
-        let taskType = (resources
-            .first(where: { $0.name == name })?
-            .type)!
-
-        return try! taskType.create(from: task)
+    private func decode(task: Data, with name: String) throws -> Task {
+        let taskType = try resources[name].or(throw: SwiftQError.taskNotFound)
+        return try taskType.create(from: task)
     }
-    
 
-    
 }

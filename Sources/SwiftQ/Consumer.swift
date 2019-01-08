@@ -50,8 +50,8 @@ public final class Consumer {
                     self.runRepeated(on: eventloop)
                 }
 
-                let blockedRedis = AsyncRedis.connect(eventLoop: eventloop)
-                let asyncWorker = AsyncRedis
+                let blockedRedis = Redis.connect(eventLoop: eventloop)
+                let asyncWorker = Redis
                     .connect(eventLoop: eventloop)
                     .and(blockedRedis)
                     .map(RedisQueue.init)
@@ -60,7 +60,7 @@ public final class Consumer {
                 }
 
                 asyncWorker.whenSuccess { worker -> () in
-                    AsyncRedis
+                    Redis
                         .connect(eventLoop: eventloop)
                         .then { redis in
                             self.run(preparations: self.config.preparations, with: redis)
@@ -84,7 +84,7 @@ public final class Consumer {
             }
     }
 
-    private func run(preparations: [Preparations], with redis: AsyncRedis) -> EventLoopFuture<()> {
+    private func run(preparations: [Preparations], with redis: Redis) -> EventLoopFuture<()> {
         let results = preparations.map { prepare in
             prepare(redis)
         }

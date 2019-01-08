@@ -1,5 +1,5 @@
 //
-//  AsyncRedis.swift
+//  Redis.swift
 //  SwiftQ
 //
 //  Created by John Connolly on 2018-12-26.
@@ -8,7 +8,7 @@
 import Foundation
 import NIO
 
-public final class AsyncRedis: ChannelDuplexHandler {
+public final class Redis: ChannelDuplexHandler {
 
     public typealias InboundIn = RedisData
     public typealias OutboundIn = RedisData
@@ -23,7 +23,7 @@ public final class AsyncRedis: ChannelDuplexHandler {
         self.eventLoop = eventLoop
     }
 
-    public static func connect(eventLoop: EventLoop) -> EventLoopFuture<AsyncRedis> {
+    public static func connect(eventLoop: EventLoop) -> EventLoopFuture<Redis> {
         let bootstrap = ClientBootstrap(group: eventLoop)
             .channelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
             .channelInitializer { channel in
@@ -32,7 +32,7 @@ public final class AsyncRedis: ChannelDuplexHandler {
                 }
         }
         return bootstrap.connect(host: "127.0.0.1", port: 6379).then { channel in
-            let redis = AsyncRedis(eventLoop, channel: channel)
+            let redis = Redis(eventLoop, channel: channel)
             return channel.pipeline.add(handler: redis).map {
                 return redis
             }
@@ -59,13 +59,13 @@ public final class AsyncRedis: ChannelDuplexHandler {
         return promise.futureResult
     }
 
-    public func pipeLine(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
+    public func pipeLine(commands: [RedisData]) -> EventLoopFuture<[RedisData]> {
         defer {
             channel.flush()
         }
-        _ = channel.write(wrapOutboundOut(message))
+        _ = channel.write(wrapOutboundOut(commands))
 
-        let promises = message.map { _ -> EventLoopPromise<RedisData> in
+        let promises = commands.map { _ -> EventLoopPromise<RedisData> in
             channel.eventLoop.newPromise()
         }
 
@@ -77,48 +77,17 @@ public final class AsyncRedis: ChannelDuplexHandler {
     }
 
 
-    public func makePipeline() -> Pipeline {
-        assert(awaiters.count == 0, "No commands can be sent while pipelining")
-        return Pipeline(channel: channel, eventLoop: eventLoop)
-    }
-
-    public final class Pipeline {
-        let channel: Channel
-        let eventLoop: EventLoop
-        let awaiters: [EventLoopPromise<RedisData>] = []
-
-        init(channel: Channel, eventLoop: EventLoop) {
-            self.channel = channel
-            self.eventLoop = eventLoop
-        }
-
-        public func pipeLine(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
-            defer {
-                channel.flush()
-            }
-//            _ = channel.write(wrapOutboundOut(message))
-            let promise: EventLoopPromise<[RedisData]> = channel.eventLoop.newPromise()
-            return promise.futureResult
-        }
-
-        public func pipeLineStream(message: (StreamState) -> ()) {
-
-        }
-
-
-    }
-
-
-
     func send(_ command: Command) -> EventLoopFuture<RedisData> {
         return send(message: .array(command.redisData))
     }
 
-}
+    func pipeLine(_ commands: [Command]) -> EventLoopFuture<[RedisData]> {
+        let redisData = commands.map { command in
+            RedisData.array(command.redisData)
+        }
+        return pipeLine(commands: redisData)
+    }
 
-public enum StreamState {
-    case message(RedisData)
-    case done
 }
 
 public indirect enum RedisData {

@@ -19,8 +19,8 @@ public final class Producer {
     }
 
     public static func connect(on eventloop: EventLoop) -> EventLoopFuture<Producer> {
-        let blockedRedis = AsyncRedis.connect(eventLoop: eventloop)
-        return AsyncRedis
+        let blockedRedis = Redis.connect(eventLoop: eventloop)
+        return Redis
             .connect(eventLoop: eventloop)
             .and(blockedRedis)
             .map(RedisQueue.init)

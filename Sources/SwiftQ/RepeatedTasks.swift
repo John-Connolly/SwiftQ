@@ -8,9 +8,9 @@
 import Foundation
 import NIO
 
-public typealias RepeatedTasks = (AsyncRedis) -> EventLoopFuture<()>
+public typealias RepeatedTasks = (Redis) -> EventLoopFuture<()>
 
-public func heartBeat(redis: AsyncRedis) -> EventLoopFuture<()> {
+public func heartBeat(redis: Redis) -> EventLoopFuture<()> {
     return redis.send(.get(key: Host().name)).thenThrowing { value -> ConsumerInfo? in
         return try (value.data).map(decode)
         }.thenThrowing { info -> Data in
@@ -27,14 +27,14 @@ public func heartBeat(redis: AsyncRedis) -> EventLoopFuture<()> {
 final class RepeatedTaskRunner {
 
     let eventloop: EventLoop
-    let redis: AsyncRedis
-    let tasks: [(AsyncRedis) -> EventLoopFuture<()>]
+    let redis: Redis
+    let tasks: [(Redis) -> EventLoopFuture<()>]
 
     var canceled = false
 
     init(on eventloop: EventLoop,
-         with redis: AsyncRedis,
-         tasks: [(AsyncRedis) -> EventLoopFuture<()>]) {
+         with redis: Redis,
+         tasks: [(Redis) -> EventLoopFuture<()>]) {
         self.eventloop = eventloop
         self.redis = redis
         self.tasks = tasks
@@ -55,7 +55,7 @@ final class RepeatedTaskRunner {
     }
 
     static func connect(on eventloop: EventLoop, with tasks: [RepeatedTasks]) -> EventLoopFuture<RepeatedTaskRunner> {
-        return AsyncRedis
+        return Redis
             .connect(eventLoop: eventloop)
             .map { redis in
                return RepeatedTaskRunner(on: eventloop, with: redis, tasks: tasks)

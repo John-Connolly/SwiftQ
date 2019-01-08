@@ -9,10 +9,12 @@ let package = Package(
         ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", .exact("1.8.0")),
+        .package(url: "https://github.com/John-Connolly/terse.git", .branch("master"))
+
     ],
     targets: [
         .target(name: "Dev", dependencies: ["SwiftQ"]),
-        .target(name: "SwiftQ", dependencies: ["NIO"]),
+        .target(name: "SwiftQ", dependencies: ["NIO", "Terse"]),
         .testTarget(name: "SwiftQTests", dependencies: ["SwiftQ"])
     ]
 )

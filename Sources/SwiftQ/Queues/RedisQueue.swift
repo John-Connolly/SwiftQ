@@ -10,13 +10,13 @@ import NIO
 
 public final class RedisQueue {
 
-    let redis: AsyncRedis
-    let bredis: AsyncRedis
+    let redis: Redis
+    let bredis: Redis
     let name: String
 
     var dequeued: ((Data) -> ())?
 
-    public init(redis: AsyncRedis, bredis: AsyncRedis) { //, name: String
+    public init(redis: Redis, bredis: Redis) { //, name: String
         self.redis = redis
         self.bredis = bredis
         self.name = RedisKey.queue("default")
@@ -58,16 +58,16 @@ public final class RedisQueue {
         fatalError()
     }
 
-    public func complete(task: Data) -> EventLoopFuture<[RedisData]> {
-        return flatten(array: [
-            redis.send(.lrem(key: name + ":processing", count: 1, value: task)),
-            redis.send(.incr(key: RedisKey.statsProcessed)),
-            redis.send(.incr(key: RedisKey.statsProcessedDate(date())))
-        ], on: redis.eventLoop)
+    public func complete(task: Data) -> EventLoopFuture<RedisData> {
+        return redis.send(.lrem(key: name + ":processing", count: 1, value: task))
     }
 
-    public func recordStats() {
-        //redis.send(.incr(key: "stats:proccessed"))
+    public func recordStats(isSuccessful: Bool) -> EventLoopFuture<[RedisData]> {
+        let commands: [Command] = [
+            .incr(key: isSuccessful ? RedisKey.statsProcessed : RedisKey.statsFailed),
+            .incr(key: isSuccessful ? RedisKey.statsProcessedDate(date()) : RedisKey.statsFailedDate(date())),
+        ]
+        return redis.pipeLine(commands)
     }
 
 }

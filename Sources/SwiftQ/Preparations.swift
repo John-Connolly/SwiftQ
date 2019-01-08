@@ -8,16 +8,16 @@
 import Foundation
 import NIO
 
-public typealias Preparations = (AsyncRedis) -> EventLoopFuture<()>
+public typealias Preparations = (Redis) -> EventLoopFuture<()>
 
-public func onBoot(redis: AsyncRedis) -> EventLoopFuture<()> {
+public func onBoot(redis: Redis) -> EventLoopFuture<()> {
     let hostname = Host().name
     return redis.send(.sadd(key: RedisKey.processes, value: hostname)).map { _ in
         return ()
     }
 }
 
-public func consumerInfo(redis: AsyncRedis) -> EventLoopFuture<()> {
+public func consumerInfo(redis: Redis) -> EventLoopFuture<()> {
     let consumerInfo = ConsumerInfo.initial
     return redis.eventLoop.newFuture {
         try encode(item: consumerInfo)
