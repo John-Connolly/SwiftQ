@@ -8,6 +8,7 @@
 
 import Foundation
 import NIO
+import Terse
 
 public final class Producer {
 
@@ -23,7 +24,7 @@ public final class Producer {
         return Redis
             .connect(eventLoop: eventloop)
             .and(blockedRedis)
-            .map(RedisQueue.init)
+            .map { RedisQueue(name: "default", redis: $0.0, bredis: $0.1) }
             .map(Producer.init)
     }
 

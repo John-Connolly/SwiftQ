@@ -9,6 +9,7 @@
 import Foundation
 import Dispatch
 import NIO
+import Terse
 
 public final class Consumer {
 
@@ -54,10 +55,10 @@ public final class Consumer {
                 let asyncWorker = Redis
                     .connect(eventLoop: eventloop)
                     .and(blockedRedis)
-                    .map(RedisQueue.init)
+                    .map { RedisQueue(name: self.config.queue, redis: $0.0, bredis: $0.1) }
                     .map {
                         AsyncWorker.init(queue: $0, decoder: decoder)
-                }
+                    }
 
                 asyncWorker.whenSuccess { worker -> () in
                     Redis
@@ -78,7 +79,7 @@ public final class Consumer {
 
     private func runRepeated(on eventloop: EventLoop) {
         RepeatedTaskRunner
-            .connect(on: eventloop, with: self.config.repeatedTasks)
+            .connect(on: eventloop, interval: self.config.pollingInterval ,with: self.config.repeatedTasks)
             .whenSuccess { runner in
                 runner.run()
             }
@@ -92,26 +93,4 @@ public final class Consumer {
             return ()
         }
     }
-}
-
-
-
-
-// TODO: Move this
-func flatten<T>(array: [EventLoopFuture<T>], on eventLoop: EventLoop) -> EventLoopFuture<[T]> {
-    var expectations: [T] = []
-    let promise: EventLoopPromise<[T]> = eventLoop.newPromise()
-    array.forEach { future in
-        future.whenSuccess { item in
-            expectations.append(item)
-            if expectations.count == array.count {
-                promise.succeed(result: expectations)
-            }
-        }
-        future.whenFailure { error in
-            promise.fail(error: error)
-        }
-
-    }
-    return promise.futureResult
 }

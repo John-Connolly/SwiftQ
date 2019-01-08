@@ -28,16 +28,19 @@ final class RepeatedTaskRunner {
 
     let eventloop: EventLoop
     let redis: Redis
+    let pollingInterval: Int
     let tasks: [(Redis) -> EventLoopFuture<()>]
 
     var canceled = false
 
     init(on eventloop: EventLoop,
          with redis: Redis,
+         pollingInterval: Int,
          tasks: [(Redis) -> EventLoopFuture<()>]) {
         self.eventloop = eventloop
         self.redis = redis
         self.tasks = tasks
+        self.pollingInterval = pollingInterval
     }
 
     func run() {
@@ -54,11 +57,13 @@ final class RepeatedTaskRunner {
         return flatten(array: tasks.map { $0(redis) }, on: eventloop)
     }
 
-    static func connect(on eventloop: EventLoop, with tasks: [RepeatedTasks]) -> EventLoopFuture<RepeatedTaskRunner> {
+    static func connect(on eventloop: EventLoop,
+                        interval: Int,
+                        with tasks: [RepeatedTasks]) -> EventLoopFuture<RepeatedTaskRunner> {
         return Redis
             .connect(eventLoop: eventloop)
             .map { redis in
-               return RepeatedTaskRunner(on: eventloop, with: redis, tasks: tasks)
+                return RepeatedTaskRunner(on: eventloop, with: redis, pollingInterval: interval ,tasks: tasks)
             }
     }
 

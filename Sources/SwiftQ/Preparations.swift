@@ -28,16 +28,3 @@ public func consumerInfo(redis: Redis) -> EventLoopFuture<()> {
     }
 
 }
-
-
-extension EventLoop {
-
-    func newFuture<T>(from f: () throws -> T) -> EventLoopFuture<T> {
-        do {
-            return newSucceededFuture(result: try f())
-        } catch {
-            return newFailedFuture(error: error)
-        }
-    }
-
-}

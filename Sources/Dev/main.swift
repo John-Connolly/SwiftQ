@@ -22,26 +22,26 @@ import SwiftQ
 // Implement signal handling for safe shutdown
 
 
-let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-let eventloop = group.next()
+//let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+//let eventloop = group.next()
 
-let config = Configuration(pollingInterval: 10,
+let config = Configuration(pollingInterval: 1,
                            enableScheduling: false,
                            concurrency: 4,
                            redisConfig: .development,
                            tasks: [Email.self]
 )
 
-let email = Email(email: "jconnolly2")
-
-let emails = (1...10_000).map { _ in
-    return email
-}
-
-let resp = Producer.connect(on: eventloop).then { producer in
-//    producer.enqueue(task: email)
-    producer.enqueue(tasks: emails)
-}
+//let email = Email(email: "jconnolly2")
+//
+//let emails = (1...10_000).map { _ in
+//    return email
+//}
+//
+//let resp = Producer.connect(on: eventloop).then { producer in
+////    producer.enqueue(task: email)
+//    producer.enqueue(tasks: emails)
+//}
 
 
 let consumer = try Consumer(config)

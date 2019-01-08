@@ -16,10 +16,10 @@ public final class RedisQueue {
 
     var dequeued: ((Data) -> ())?
 
-    public init(redis: Redis, bredis: Redis) { //, name: String
+    public init(name: String, redis: Redis, bredis: Redis) {
         self.redis = redis
         self.bredis = bredis
-        self.name = RedisKey.queue("default")
+        self.name = RedisKey.queue(name)
     }
 
     public func enqueue<C: Codable>(task: C) -> EventLoopFuture<Int> {
