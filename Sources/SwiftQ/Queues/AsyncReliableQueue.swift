@@ -12,27 +12,28 @@ public final class AsyncReliableQueue {
 
     let redis: AsyncRedis
     let bredis: AsyncRedis
-    let key: RedisKey
+//    let key: RedisKey
+    let name: String
 
     var dequeued: ((Data) -> ())?
 
     public init(redis: AsyncRedis, bredis: AsyncRedis) { //, name: String
         self.redis = redis
         self.bredis = bredis
-        self.key = RedisKey.queue("default")
+        self.name = RedisKey.queue("default")
     }
 
     public func enqueue<C: Codable>(task: C) -> EventLoopFuture<Int> {
         let data = encode(item: task)
-        return redis.send(.lpush(key: key.name, values: [data])).map { $0.int! }
+        return redis.send(.lpush(key: name, values: [data])).map { $0.int! }
     }
 
     public func enqueue<C: Codable>(contentsOf tasks: [C]) -> EventLoopFuture<Int> {
-        return redis.send(.lpush(key: key.name, values: tasks.map(encode))).map { $0.int! }
+        return redis.send(.lpush(key: name, values: tasks.map(encode))).map { $0.int! }
     }
 
     public func bdqueue() {
-        let resp = bredis.send(.brpoplpush(q1: key.name, q2: key.name + ":processing", timeout: 0))
+        let resp = bredis.send(.brpoplpush(q1:name, q2: name + ":processing", timeout: 0))
         resp.whenSuccess { data in
               self.dequeued?(data.data!)
               self.bdqueue()
@@ -45,7 +46,7 @@ public final class AsyncReliableQueue {
 
     public func complete(task: Data) -> EventLoopFuture<[RedisData]> {
         return flatten(array: [
-            redis.send(.lrem(key: key.name + ":processing", count: 1, value: task)),
+            redis.send(.lrem(key: name + ":processing", count: 1, value: task)),
             redis.send(.incr(key: "stats:proccessed"))
             ], on: redis.eventLoop)
     }

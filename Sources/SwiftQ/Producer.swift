@@ -11,7 +11,6 @@ import NIO
 
 public final class Producer {
 
-//    private let scheduledQueue: ScheduledQueue
 
     private let reliableQueue: AsyncReliableQueue
 

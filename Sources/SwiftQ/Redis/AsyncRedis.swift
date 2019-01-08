@@ -16,8 +16,7 @@ public final class AsyncRedis: ChannelDuplexHandler {
 
     let eventLoop: EventLoop
     let channel: Channel
-
-    var awaiters: [([RedisData]) -> ()] = []
+    var awaiters: [EventLoopPromise<RedisData>] = []
 
     init(_ eventLoop: EventLoop, channel: Channel) {
         self.channel = channel
@@ -43,7 +42,7 @@ public final class AsyncRedis: ChannelDuplexHandler {
     public func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
         let input = unwrapInboundIn(data)
         let awaiter = awaiters.removeFirst()
-        awaiter([input])
+        awaiter.succeed(result: input)
     }
 
 
@@ -51,36 +50,65 @@ public final class AsyncRedis: ChannelDuplexHandler {
         defer {
             channel.flush()
         }
+
         _ = channel.write(wrapOutboundOut([message]))
 
         let promise: EventLoopPromise<RedisData> = channel.eventLoop.newPromise()
-
-        let awaiter = { (messages: [RedisData]) in
-            promise.succeed(result: messages[0])
-        }
-        awaiters.append(awaiter)
+        awaiters.append(promise)
 
         return promise.futureResult
     }
 
-    // FIXME
     public func pipeLine(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
         defer {
             channel.flush()
         }
         _ = channel.write(wrapOutboundOut(message))
-        let promise: EventLoopPromise<[RedisData]> = channel.eventLoop.newPromise()
-//        message.forEach
-        let awaiter = { (messages: [RedisData]) in
-            promise.succeed(result: messages)
+
+        let promises = message.map { _ -> EventLoopPromise<RedisData> in
+            channel.eventLoop.newPromise()
         }
-        awaiters.append(awaiter)
-        return promise.futureResult
+
+        awaiters.append(contentsOf: promises)
+
+        let futures = promises.map { $0.futureResult }
+
+        return flatten(array: futures, on: channel.eventLoop)
     }
 
-    public func pipeLineStream(message: (StreamState) -> ()) {
+
+    public func makePipeline() -> Pipeline {
+        assert(awaiters.count == 0, "No commands can be sent while pipelining")
+        return Pipeline(channel: channel, eventLoop: eventLoop)
+    }
+
+    public final class Pipeline {
+        let channel: Channel
+        let eventLoop: EventLoop
+        let awaiters: [EventLoopPromise<RedisData>] = []
+
+        init(channel: Channel, eventLoop: EventLoop) {
+            self.channel = channel
+            self.eventLoop = eventLoop
+        }
+
+        public func pipeLine(message: [RedisData]) -> EventLoopFuture<[RedisData]> {
+            defer {
+                channel.flush()
+            }
+//            _ = channel.write(wrapOutboundOut(message))
+            let promise: EventLoopPromise<[RedisData]> = channel.eventLoop.newPromise()
+            return promise.futureResult
+        }
+
+        public func pipeLineStream(message: (StreamState) -> ()) {
+
+        }
+
 
     }
+
+
 
     func send(_ command: Command) -> EventLoopFuture<RedisData> {
         return send(message: .array(command.redisData))
@@ -127,7 +155,6 @@ final class RedisEncoder: MessageToByteEncoder {
         out.write(bytes: encoded)
     }
 
-    /// TODO: Switch to return data
     private func encode(data: RedisData) -> Data {
         switch data {
         case let .basicString(basicString):
@@ -137,7 +164,6 @@ final class RedisEncoder: MessageToByteEncoder {
         case let .integer(integer):
             return Data(":\(integer)\r\n".utf8)
         case let .bulkString(bulkData):
-//            let str = String(bytes: bulkData, encoding: .utf8)!
             return Data("$\(bulkData.count.description)\r\n".utf8) + bulkData + Data("\r\n".utf8)
         case .null:
             return Data("$-1\r\n".utf8)

@@ -12,7 +12,7 @@ public typealias Preparations = (AsyncRedis) -> EventLoopFuture<()>
 
 public func onBoot(redis: AsyncRedis) -> EventLoopFuture<()> {
     let hostname = Host().name
-    return redis.send(.sadd(key: "processes", value: hostname)).map { _ in
+    return redis.send(.sadd(key: RedisKey.processes, value: hostname)).map { _ in
         return ()
     }
 }

@@ -10,13 +10,11 @@ import Foundation
 
 enum RedisKey {
 
-    case queue(String)
+    static let processes = "processes"
+    static let statsProcessed = "stats:proccessed"
 
-    var name: String {
-        switch self {
-        case .queue(let name):
-            return "queue:" + name
-        }
+    static let queue = { name in
+        return "queue:" + name
     }
 }
 
