@@ -34,7 +34,7 @@ let config = Configuration(pollingInterval: 10,
 
 let email = Email(email: "jconnolly2")
 
-let emails = (1...100).map { _ in
+let emails = (1...10_000).map { _ in
     return email
 }
 
@@ -42,7 +42,6 @@ let resp = Producer.connect(on: eventloop).then { producer in
 //    producer.enqueue(task: email)
     producer.enqueue(tasks: emails)
 }
-
 
 
 let consumer = try Consumer(config)

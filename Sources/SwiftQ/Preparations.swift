@@ -19,8 +19,25 @@ public func onBoot(redis: AsyncRedis) -> EventLoopFuture<()> {
 
 public func consumerInfo(redis: AsyncRedis) -> EventLoopFuture<()> {
     let consumerInfo = ConsumerInfo.initial
-    let data = encode(item: consumerInfo)
-    return redis.send(.set(key: Host().name, value: data)).map { value -> () in
-        return ()
+    return redis.eventLoop.newFuture {
+        try encode(item: consumerInfo)
+    }.then { data in
+        return redis.send(.set(key: Host().name, value: data)).map { value -> () in
+            return ()
+        }
     }
+
+}
+
+
+extension EventLoop {
+
+    func newFuture<T>(from f: () throws -> T) -> EventLoopFuture<T> {
+        do {
+            return newSucceededFuture(result: try f())
+        } catch {
+            return newFailedFuture(error: error)
+        }
+    }
+
 }

@@ -16,6 +16,10 @@ enum RedisKey {
     static let queue = { name in
         return "queue:" + name
     }
+
+    static let statsProcessedDate = { date in
+        return statsProcessed + ":" + date
+    }
 }
 
 

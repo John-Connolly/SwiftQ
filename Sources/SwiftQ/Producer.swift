@@ -12,9 +12,9 @@ import NIO
 public final class Producer {
 
 
-    private let reliableQueue: AsyncReliableQueue
+    private let reliableQueue: RedisQueue
 
-    public init(reliableQueue: AsyncReliableQueue) {
+    public init(reliableQueue: RedisQueue) {
         self.reliableQueue = reliableQueue
     }
 
@@ -23,7 +23,7 @@ public final class Producer {
         return AsyncRedis
             .connect(eventLoop: eventloop)
             .and(blockedRedis)
-            .map(AsyncReliableQueue.init)
+            .map(RedisQueue.init)
             .map(Producer.init)
     }
 

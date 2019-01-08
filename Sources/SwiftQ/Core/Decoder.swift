@@ -12,7 +12,7 @@ struct Decoder {
     
     private let types:  [Task.Type]
     
-    private let resources: [InitResource]
+    private let resources: [InitResource] // TODO: make a dictionary!
     
     init(types: [Task.Type]) {
         self.types = types
@@ -34,7 +34,7 @@ struct Decoder {
             .first(where: { $0.name == name })?
             .type)!
 
-        return taskType.create(from: task)
+        return try! taskType.create(from: task)
     }
     
 

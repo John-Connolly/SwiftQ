@@ -11,12 +11,12 @@ import NIO
 public typealias RepeatedTasks = (AsyncRedis) -> EventLoopFuture<()>
 
 public func heartBeat(redis: AsyncRedis) -> EventLoopFuture<()> {
-    return redis.send(.get(key: Host().name)).map { value -> ConsumerInfo? in
-        return (value.data).map(decode)
-        }.map { info -> Data in
-            var info = info! // fix me!!
+    return redis.send(.get(key: Host().name)).thenThrowing { value -> ConsumerInfo? in
+        return try (value.data).map(decode)
+        }.thenThrowing { info -> Data in
+            var info = try info.or(throw: "Invalid data stored at key \(Host().name)")
             info.incrHeartbeat()
-            return encode(item: info)
+            return try encode(item: info)
         }.thenThrowing { data in
             return redis.send(.set(key: Host().name, value: data))
         }.map { _ in

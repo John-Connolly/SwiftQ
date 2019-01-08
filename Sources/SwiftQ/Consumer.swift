@@ -54,7 +54,7 @@ public final class Consumer {
                 let asyncWorker = AsyncRedis
                     .connect(eventLoop: eventloop)
                     .and(blockedRedis)
-                    .map(AsyncReliableQueue.init)
+                    .map(RedisQueue.init)
                     .map {
                         AsyncWorker.init(queue: $0, decoder: decoder)
                 }

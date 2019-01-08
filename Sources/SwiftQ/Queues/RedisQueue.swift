@@ -1,5 +1,5 @@
 //
-//  AsyncReliableQueue.swift
+//  RedisQueue.swift
 //  SwiftQ
 //
 //  Created by John Connolly on 2018-12-26.
@@ -8,11 +8,10 @@
 import Foundation
 import NIO
 
-public final class AsyncReliableQueue {
+public final class RedisQueue {
 
     let redis: AsyncRedis
     let bredis: AsyncRedis
-//    let key: RedisKey
     let name: String
 
     var dequeued: ((Data) -> ())?
@@ -24,12 +23,27 @@ public final class AsyncReliableQueue {
     }
 
     public func enqueue<C: Codable>(task: C) -> EventLoopFuture<Int> {
-        let data = encode(item: task)
-        return redis.send(.lpush(key: name, values: [data])).map { $0.int! }
+        return redis.eventLoop.newFuture {
+            try encode(item: task)
+        }.then { data in
+            return self.redis
+                .send(.lpush(key: self.name, values: [data]))
+                .thenThrowing { data in
+                    try data.int.or(throw: SwiftQError.invalidType("Expected integer"))
+            }
+        }
     }
 
     public func enqueue<C: Codable>(contentsOf tasks: [C]) -> EventLoopFuture<Int> {
-        return redis.send(.lpush(key: name, values: tasks.map(encode))).map { $0.int! }
+        return redis.eventLoop.newFuture {
+            try tasks.map(encode)
+        }.then { data -> EventLoopFuture<Int> in
+            return self.redis
+                .send(.lpush(key: self.name, values: data))
+                .thenThrowing { data -> Int in
+                    return try data.int.or(throw: SwiftQError.invalidType("Expected integer"))
+            }
+        }
     }
 
     public func bdqueue() {
@@ -47,8 +61,13 @@ public final class AsyncReliableQueue {
     public func complete(task: Data) -> EventLoopFuture<[RedisData]> {
         return flatten(array: [
             redis.send(.lrem(key: name + ":processing", count: 1, value: task)),
-            redis.send(.incr(key: "stats:proccessed"))
-            ], on: redis.eventLoop)
+            redis.send(.incr(key: RedisKey.statsProcessed)),
+            redis.send(.incr(key: RedisKey.statsProcessedDate(date())))
+        ], on: redis.eventLoop)
+    }
+
+    public func recordStats() {
+        //redis.send(.incr(key: "stats:proccessed"))
     }
 
 }
@@ -62,17 +81,23 @@ public protocol AsyncQueue {
 }
 
 
+func date() -> String {
+    let date = Date()
+    let formatter = DateFormatter()
+    formatter.timeZone = TimeZone(abbreviation: "UTC")
+    formatter.dateStyle = .short
+    return formatter.string(from: date)
+}
 
-// TODO: Return result here!
-func encode<C: Encodable>(item: C) -> Data {
+func encode<C: Encodable>(item: C) throws -> Data {
     let encoder = JSONEncoder()
     if #available(OSX 10.13, *) {
         encoder.outputFormatting = .sortedKeys
     }
-    return try! encoder.encode(item)
+    return try encoder.encode(item)
 }
 
-func decode<C: Decodable>(data: Data) -> C {
+func decode<C: Decodable>(data: Data) throws -> C {
     let decoder = JSONDecoder()
-    return try! decoder.decode(C.self, from: data)
+    return try decoder.decode(C.self, from: data)
 }

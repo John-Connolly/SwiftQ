@@ -16,6 +16,7 @@ public enum SwiftQError: Swift.Error {
     case tasksNotRegistered
     case invalidConcurrency(Int)
     case invalidQueueName(String)
+    case invalidType(String) // TODO: Rename this!
     
 }
 
@@ -29,6 +30,7 @@ extension SwiftQError: LocalizedError {
         case .invalidConcurrency: return "Concurrency cannot be zero"
         case .invalidQueueName: return "Queue name cannot be empty string"
         case .unimplemented: return nil
+        case .invalidType(let reason): return reason
         }
     }
     

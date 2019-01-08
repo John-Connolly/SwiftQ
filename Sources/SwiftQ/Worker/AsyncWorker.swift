@@ -10,11 +10,11 @@ import NIO
 
 final class AsyncWorker {
 
-    let queue: AsyncReliableQueue
+    let queue: RedisQueue
     let decoder: Decoder
 
 
-    init(queue: AsyncReliableQueue, decoder: Decoder) {
+    init(queue: RedisQueue, decoder: Decoder) {
         self.queue = queue
         self.decoder = decoder
     }
@@ -22,8 +22,12 @@ final class AsyncWorker {
     func run() {
         queue.dequeued = { data in
             let task = try! self.decoder.decode(data: data) // FIX ME
-            task.execute(loop: self.queue.redis.eventLoop).whenComplete {
+            let taskResult = task.execute(loop: self.queue.redis.eventLoop)
+            taskResult.whenSuccess {
                 self.complete(task: data)
+            }
+            taskResult.whenFailure { error in
+
             }
         }
 
