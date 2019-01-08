@@ -9,7 +9,6 @@ let package = Package(
         ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", .exact("1.8.0")),
-
     ],
     targets: [
         .target(name: "SwiftQDev", dependencies: ["SwiftQ"]),

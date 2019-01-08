@@ -24,26 +24,24 @@ final class AsyncWorker {
             let task = try! self.decoder.decode(data: data) // FIX ME
             let taskResult = task.execute(loop: self.queue.redis.eventLoop)
             taskResult.whenSuccess {
-                self.complete(task: data)
+                self.complete(task: data, isSuccessful: true)
             }
             taskResult.whenFailure { error in
-
+                self.complete(task: data, isSuccessful: false)
             }
         }
 
         queue.bdqueue()
     }
 
-    func complete(task: Data) {
-        let future = queue.complete(task: task)
+    func complete(task: Data, isSuccessful: Bool) {
+        let future = queue.complete(task: task).then { _ in
+            self.queue.recordStats(isSuccessful: isSuccessful)
+        }
+
         future.whenFailure { error in
             print(error)
         }
-
-//        future.whenSuccess { data in
-////            print(data)
-//        }
-
 
     }
 }
