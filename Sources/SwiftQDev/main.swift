@@ -27,7 +27,7 @@ import SwiftQ
 
 let config = Configuration(pollingInterval: 1,
                            enableScheduling: false,
-                           concurrency: 4,
+                           concurrency: 1,
                            redisConfig: .development,
                            tasks: [Email.self]
 )

@@ -15,12 +15,12 @@ struct Email: Task {
 
     func execute(loop: EventLoop) -> EventLoopFuture<()> {
 
-        let promise: EventLoopPromise<()> = loop.newPromise()
-        _ = loop.scheduleTask(in: TimeAmount.seconds(1)) { 
-            promise.succeed(result: ())
-        }
+//        let promise: EventLoopPromise<()> = loop.newPromise()
+//        _ = loop.scheduleTask(in: TimeAmount.seconds(1)) {
+//            promise.succeed(result: ())
+//        }
 //        print(email)
-        return promise.futureResult //loop.newSucceededFuture(result: ())
+        return loop.newSucceededFuture(result: ())
     }
 
 }
