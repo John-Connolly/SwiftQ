@@ -38,7 +38,7 @@ struct Deploy: Task {
 
     func execute(loop: EventLoop) -> EventLoopFuture<()> {
         let task = Process()
-        task.launchPath = "/bin/sh"//"/Users/johnconnolly/documents/opensource/concorde"//"/root/concorde"
+        task.launchPath = "/bin/bash"//"/Users/johnconnolly/documents/opensource/concorde"//"/root/concorde"
         task.arguments = args
 
         let pipe = Pipe()
