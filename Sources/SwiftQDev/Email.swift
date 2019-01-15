@@ -47,7 +47,7 @@ struct Deploy: Task {
 
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: String.Encoding.utf8)
-//        print(output)
+        print(output ?? "Nothing Happened!!")
         task.waitUntilExit()
         return loop.newSucceededFuture(result: ())
     }
