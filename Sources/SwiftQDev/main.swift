@@ -27,10 +27,12 @@ import SwiftQ
 
 let config = Configuration(pollingInterval: 1,
                            enableScheduling: false,
-                           concurrency: 1,
+                           concurrency: 6,
                            redisConfig: .development,
-                           tasks: [Email.self]
+                           tasks: [Email.self, Deploy.self]
 )
+
+
 
 //let email = Email(email: "jconnolly2")
 //
@@ -38,15 +40,19 @@ let config = Configuration(pollingInterval: 1,
 //    return email
 //}
 //
+
+
+
 //let resp = Producer.connect(on: eventloop).then { producer in
 ////    producer.enqueue(task: email)
-//    producer.enqueue(tasks: emails)
+//    producer.enqueue(tasks: [Deploy(args: ["bash", "/Users/johnconnolly/documents/opensource/concorde/deploy.sh"])])
 //}
 
 
 let consumer = try Consumer(config)
 consumer.run()
 
+//let deploy =
 
 //RunLoop.main.run()
 

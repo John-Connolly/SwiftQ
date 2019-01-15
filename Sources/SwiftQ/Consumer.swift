@@ -32,6 +32,15 @@ public final class Consumer {
         }
         
         self.config = configuration
+//        for task in config.tasks {
+//            let decoder = TaskLayoutDecoder()
+//           _ = try task.init(from: decoder)
+//            print(decoder.info)
+////            print(decoder.keys.map { $0 })
+//
+//
+//
+//        }
     }
 
     /// TODO: preperations and repeated tasks should only happen on 1 event loop
@@ -56,7 +65,7 @@ public final class Consumer {
                     .and(blockedRedis)
                     .map { RedisQueue(name: self.config.queue, redis: $0.0, bredis: $0.1) }
                     .map {
-                        AsyncWorker.init(queue: $0, decoder: decoder)
+                        AsyncWorker(queue: $0, decoder: decoder)
                     }
 
                 asyncWorker.whenSuccess { worker -> () in

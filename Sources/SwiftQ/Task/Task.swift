@@ -38,6 +38,15 @@ extension Task {
     }
 
 
+    static func layout(from decoder: Swift.Decoder) {
+        let decoder = TaskLayoutDecoder()
+//        let layout = Self.
+//        let map = try decoder.container(keyedBy: Task.CodingKeys.self)
+        let map = decoder.userInfo
+        print(map)
+    }
+
+
     func log(with error: Error, consumer: String) {
 //        let log = Log(message: error.localizedDescription,
 //                      consumer: consumer,
