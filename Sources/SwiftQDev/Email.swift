@@ -12,11 +12,11 @@ import SwiftQ
 struct Email: Task {
 
     let email: String
-    let hello: Hello
-
-    struct Hello: Codable {
-        let int: Int
-    }
+//    let hello: Hello
+//
+//    struct Hello: Codable {
+//        let int: Int
+//    }
 
     func execute(loop: EventLoop) -> EventLoopFuture<()> {
 
@@ -47,7 +47,7 @@ struct Deploy: Task {
 
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: String.Encoding.utf8)
-        print(output)
+//        print(output)
         task.waitUntilExit()
         return loop.newSucceededFuture(result: ())
     }
