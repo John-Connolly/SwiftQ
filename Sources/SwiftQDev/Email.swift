@@ -40,6 +40,7 @@ struct Deploy: Task {
         let task = Process()
         task.launchPath = "/bin/bash"//"/Users/johnconnolly/documents/opensource/concorde"//"/root/concorde"
         task.arguments = args
+        task.qualityOfService = .userInitiated
 
         let pipe = Pipe()
         task.standardOutput = pipe
@@ -49,6 +50,7 @@ struct Deploy: Task {
         let output = String(data: data, encoding: String.Encoding.utf8)
         print(output ?? "Nothing Happened!!")
         task.waitUntilExit()
+
         return loop.newSucceededFuture(result: ())
     }
 

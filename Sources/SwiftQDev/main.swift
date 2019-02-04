@@ -45,9 +45,9 @@ let config = Configuration(pollingInterval: 1,
 
 //let resp = Producer.connect(on: eventloop).then { producer in
 ////    producer.enqueue(task: email)
-//    producer.enqueue(tasks: [Deploy(args: ["bash", "/Users/johnconnolly/documents/opensource/concorde/deploy.sh"])])
+//    producer.enqueue(tasks: [Deploy(args: ["/Users/johnconnolly/documents/opensource/concorde/deploy.sh"])])
 //}
-
+////deploy.sh
 
 let consumer = try Consumer(config)
 consumer.run()
